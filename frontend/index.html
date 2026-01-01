@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyEnglish - Offline English Learning</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#8B5CF6',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+
+        .flip-card {
+            perspective: 1000px;
+        }
+
+        .flip-card-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            backface-visibility: hidden;
+        }
+
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3B82F6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .slide-enter {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen" x-data="app">
+    <!-- Navigation Sidebar -->
+    <nav class="fixed left-0 top-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300"
+         :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }"
+         @click.outside="sidebarOpen = window.innerWidth >= 1024">
+
+        <!-- Logo -->
+        <div class="p-6 border-b">
+            <h1 class="text-2xl font-bold text-primary flex items-center">
+                <i class="fas fa-book-open mr-3"></i>
+                StudyEnglish
+            </h1>
+            <p class="text-sm text-gray-500 mt-1">Offline Learning</p>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="py-4">
+            <template x-for="(section, sectionIdx) in navSections" :key="sectionIdx">
+                <div class="mb-4">
+                    <p class="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider" x-text="section.title"></p>
+                    <template x-for="item in section.items" :key="item.id">
+                        <a href="#"
+                           class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 hover:text-primary transition-colors"
+                           :class="{ 'bg-blue-50 text-primary border-r-4 border-primary': currentPage === item.id }"
+                           @click.prevent="navigateTo(item.id)">
+                            <i :class="item.icon + ' w-6 text-center mr-3'"></i>
+                            <span x-text="item.name"></span>
+                            <span x-show="item.badge"
+                                  class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full"
+                                  x-text="item.badge"></span>
+                        </a>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+        <!-- User Stats -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t bg-gray-50">
+            <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">
+                    <i class="fas fa-fire text-orange-500 mr-1"></i>
+                    <span x-text="stats.streak + ' day streak'"></span>
+                </span>
+                <span class="text-gray-600">
+                    <i class="fas fa-book text-primary mr-1"></i>
+                    <span x-text="stats.wordsLearned + ' words'"></span>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Header -->
+    <header class="lg:hidden fixed top-0 left-0 right-0 bg-white shadow z-40 px-4 py-3">
+        <div class="flex items-center justify-between">
+            <button @click="sidebarOpen = !sidebarOpen" class="text-gray-600 hover:text-primary">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <h1 class="text-lg font-bold text-primary">StudyEnglish</h1>
+            <button @click="showNotifications = !showNotifications" class="text-gray-600 hover:text-primary relative">
+                <i class="fas fa-bell text-xl"></i>
+                <span x-show="notifications.length > 0" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center" x-text="notifications.length"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
+        <!-- Top Bar -->
+        <div class="hidden lg:flex items-center justify-between px-6 py-4 bg-white border-b">
+            <div>
+                <h2 class="text-xl font-semibold text-gray-800" x-text="pageTitle"></h2>
+                <p class="text-sm text-gray-500" x-text="pageDescription"></p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <!-- Search -->
+                <div class="relative">
+                    <input type="text"
+                           placeholder="Search vocabulary..."
+                           class="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                           x-model="searchQuery"
+                           @keyup.enter="searchVocabulary">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+
+                <!-- Notifications -->
+                <button @click="showNotifications = !showNotifications" class="relative p-2 text-gray-600 hover:text-primary">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span x-show="notifications.length > 0" class="absolute top-0 right-0 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center" x-text="notifications.length"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div class="p-6">
+            <!-- Dashboard Page -->
+            <div x-show="currentPage === 'dashboard'" x-cloak class="slide-enter">
+                <template x-if="currentPage === 'dashboard'">
+                    <div x-data="dashboardPage" x-init="init()">
+                        <!-- Stats Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-blue-100 text-primary">
+                                        <i class="fas fa-book text-2xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-sm text-gray-500">Words Learned</p>
+                                        <p class="text-2xl font-bold text-gray-800" x-text="dashStats.totalWords"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-green-100 text-secondary">
+                                        <i class="fas fa-check-circle text-2xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-sm text-gray-500">Quiz Average</p>
+                                        <p class="text-2xl font-bold text-gray-800" x-text="dashStats.quizAvg + '%'"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-orange-100 text-orange-500">
+                                        <i class="fas fa-fire text-2xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-sm text-gray-500">Current Streak</p>
+                                        <p class="text-2xl font-bold text-gray-800" x-text="dashStats.streak + ' days'"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-purple-100 text-accent">
+                                        <i class="fas fa-clock text-2xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-sm text-gray-500">Study Time</p>
+                                        <p class="text-2xl font-bold text-gray-800" x-text="dashStats.studyTime + ' min'"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Charts Row -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <h3 class="text-lg font-semibold mb-4">Learning Progress</h3>
+                                <canvas id="progressChart" height="200"></canvas>
+                            </div>
+
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <h3 class="text-lg font-semibold mb-4">Words by Topic</h3>
+                                <canvas id="topicsChart" height="200"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="bg-white rounded-xl shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <button @click="$dispatch('navigate', 'vocabulary')" class="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-center">
+                                    <i class="fas fa-plus text-primary text-2xl mb-2"></i>
+                                    <p class="text-sm font-medium">Learn Words</p>
+                                </button>
+                                <button @click="$dispatch('navigate', 'quiz')" class="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors text-center">
+                                    <i class="fas fa-question-circle text-secondary text-2xl mb-2"></i>
+                                    <p class="text-sm font-medium">Take Quiz</p>
+                                </button>
+                                <button @click="$dispatch('navigate', 'srs')" class="p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors text-center">
+                                    <i class="fas fa-redo text-orange-500 text-2xl mb-2"></i>
+                                    <p class="text-sm font-medium">Review <span x-text="'(' + dashStats.dueReviews + ')'"></span></p>
+                                </button>
+                                <button @click="$dispatch('navigate', 'chat')" class="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-center">
+                                    <i class="fas fa-comments text-accent text-2xl mb-2"></i>
+                                    <p class="text-sm font-medium">Practice Chat</p>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Vocabulary Page -->
+            <div x-show="currentPage === 'vocabulary'" x-cloak class="slide-enter">
+                <template x-if="currentPage === 'vocabulary'">
+                    <div x-data="vocabularyPage" x-init="init()">
+                        <!-- Topic Selection -->
+                        <div class="bg-white rounded-xl shadow p-6 mb-6">
+                            <h3 class="text-lg font-semibold mb-4">Select Topic & Level</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Topic</label>
+                                    <select x-model="selectedTopic" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                                        <option value="">Select a topic...</option>
+                                        <template x-for="topic in topics" :key="topic.id">
+                                            <option :value="topic.name" x-text="topic.name"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Level</label>
+                                    <select x-model="selectedLevel" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                                        <option value="A1">A1 - Beginner</option>
+                                        <option value="A2">A2 - Elementary</option>
+                                        <option value="B1" selected>B1 - Intermediate</option>
+                                        <option value="B2">B2 - Upper Intermediate</option>
+                                        <option value="C1">C1 - Advanced</option>
+                                        <option value="C2">C2 - Proficiency</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Number of Words</label>
+                                    <input type="range" min="5" max="20" x-model="numWords" class="w-full">
+                                    <p class="text-sm text-gray-500 text-center" x-text="numWords + ' words'"></p>
+                                </div>
+                            </div>
+                            <button @click="generateVocabulary"
+                                    :disabled="loading || !selectedTopic"
+                                    class="w-full md:w-auto px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
+                                <span x-show="!loading">
+                                    <i class="fas fa-magic mr-2"></i>Generate Vocabulary
+                                </span>
+                                <span x-show="loading" class="flex items-center">
+                                    <div class="loading-spinner mr-2"></div>
+                                    Generating...
+                                </span>
+                            </button>
+                        </div>
+
+                        <!-- Topics Grid -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+                            <template x-for="topic in topics" :key="topic.id">
+                                <div @click="selectedTopic = topic.name"
+                                     class="p-4 rounded-lg cursor-pointer transition-all hover:scale-105"
+                                     :class="selectedTopic === topic.name ? 'ring-2 ring-primary shadow-lg' : 'bg-white shadow'"
+                                     :style="'background-color: ' + topic.color + '20'">
+                                    <i :class="'fas ' + topic.icon + ' text-2xl mb-2'" :style="'color: ' + topic.color"></i>
+                                    <p class="text-sm font-medium truncate" x-text="topic.name"></p>
+                                    <p class="text-xs text-gray-500" x-text="topic.word_count + ' words'"></p>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Generated Vocabulary -->
+                        <div x-show="vocabulary.length > 0" class="space-y-4">
+                            <h3 class="text-lg font-semibold">Generated Vocabulary</h3>
+                            <template x-for="word in vocabulary" :key="word.id">
+                                <div class="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+                                    <div class="flex flex-wrap items-start justify-between">
+                                        <div class="flex-1">
+                                            <div class="flex items-center space-x-3 mb-2">
+                                                <h4 class="text-xl font-bold text-primary" x-text="word.word"></h4>
+                                                <span class="text-sm text-gray-500" x-text="word.pronunciation"></span>
+                                                <span class="px-2 py-0.5 bg-gray-100 rounded text-xs" x-text="word.part_of_speech"></span>
+                                                <button @click="speakWord(word.word)" class="text-gray-400 hover:text-primary">
+                                                    <i class="fas fa-volume-up"></i>
+                                                </button>
+                                            </div>
+                                            <p class="text-lg text-gray-700 mb-2" x-text="word.meaning_vi"></p>
+                                            <div class="bg-gray-50 rounded-lg p-3 mb-2">
+                                                <p class="text-sm text-gray-600 italic" x-text="word.example_en"></p>
+                                                <p class="text-sm text-gray-500 mt-1" x-text="word.example_vi"></p>
+                                            </div>
+                                            <div x-show="word.synonyms && word.synonyms.length > 0" class="flex items-center space-x-2">
+                                                <span class="text-xs text-gray-500">Synonyms:</span>
+                                                <template x-for="syn in word.synonyms" :key="syn">
+                                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs" x-text="syn"></span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col space-y-2 ml-4">
+                                            <button @click="markAsLearned(word.id)"
+                                                    class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-green-600 transition-colors">
+                                                <i class="fas fa-check mr-1"></i> Learn
+                                            </button>
+                                            <button @click="toggleFavorite(word.id)"
+                                                    class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors"
+                                                    :class="word.is_favorite ? 'border-yellow-500 text-yellow-500' : 'border-gray-300'">
+                                                <i class="fas fa-star mr-1"></i> Favorite
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Quiz Page -->
+            <div x-show="currentPage === 'quiz'" x-cloak class="slide-enter">
+                <template x-if="currentPage === 'quiz'">
+                    <div x-data="quizPage" x-init="init()">
+                        <!-- Quiz Setup -->
+                        <div x-show="!quizActive" class="bg-white rounded-xl shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Quiz Settings</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Type</label>
+                                    <select x-model="quizType" class="w-full border rounded-lg px-4 py-2">
+                                        <option value="multiple_choice">Multiple Choice</option>
+                                        <option value="fill_blank">Fill in the Blank</option>
+                                        <option value="matching">Matching</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Topic (Optional)</label>
+                                    <select x-model="quizTopic" class="w-full border rounded-lg px-4 py-2">
+                                        <option value="">All Topics</option>
+                                        <template x-for="topic in topics" :key="topic.id">
+                                            <option :value="topic.name" x-text="topic.name"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Questions</label>
+                                    <select x-model="numQuestions" class="w-full border rounded-lg px-4 py-2">
+                                        <option value="5">5 Questions</option>
+                                        <option value="10">10 Questions</option>
+                                        <option value="15">15 Questions</option>
+                                        <option value="20">20 Questions</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button @click="startQuiz"
+                                    :disabled="loading"
+                                    class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 transition-colors">
+                                <i class="fas fa-play mr-2"></i>Start Quiz
+                            </button>
+                        </div>
+
+                        <!-- Active Quiz -->
+                        <div x-show="quizActive && !quizComplete">
+                            <div class="bg-white rounded-xl shadow p-6 mb-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-sm text-gray-500">Question <span x-text="currentQuestion + 1"></span> of <span x-text="questions.length"></span></span>
+                                    <span class="text-sm text-gray-500"><i class="fas fa-clock mr-1"></i><span x-text="formatTime(timeElapsed)"></span></span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mb-6">
+                                    <div class="bg-primary h-2 rounded-full transition-all" :style="'width: ' + ((currentQuestion + 1) / questions.length * 100) + '%'"></div>
+                                </div>
+
+                                <!-- Question -->
+                                <div x-show="questions[currentQuestion]" class="mb-6">
+                                    <h3 class="text-xl font-semibold mb-4" x-text="questions[currentQuestion]?.question"></h3>
+
+                                    <!-- Multiple Choice Options -->
+                                    <div x-show="quizType === 'multiple_choice'" class="space-y-3">
+                                        <template x-for="(option, idx) in questions[currentQuestion]?.options || []" :key="idx">
+                                            <button @click="selectAnswer(idx)"
+                                                    class="w-full p-4 text-left border rounded-lg transition-colors"
+                                                    :class="selectedAnswer === idx ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
+                                                <span class="font-medium mr-2" x-text="String.fromCharCode(65 + idx) + '.'"></span>
+                                                <span x-text="option"></span>
+                                            </button>
+                                        </template>
+                                    </div>
+
+                                    <!-- Fill in the Blank -->
+                                    <div x-show="quizType === 'fill_blank'">
+                                        <input type="text"
+                                               x-model="fillBlankAnswer"
+                                               placeholder="Type your answer..."
+                                               class="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                        <p class="text-sm text-gray-500 mt-2" x-text="'Hint: ' + (questions[currentQuestion]?.hint || '')"></p>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-between">
+                                    <button @click="previousQuestion"
+                                            :disabled="currentQuestion === 0"
+                                            class="px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fas fa-arrow-left mr-2"></i>Previous
+                                    </button>
+                                    <button @click="nextQuestion"
+                                            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600">
+                                        <span x-text="currentQuestion === questions.length - 1 ? 'Finish Quiz' : 'Next'"></span>
+                                        <i class="fas fa-arrow-right ml-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quiz Results -->
+                        <div x-show="quizComplete" class="bg-white rounded-xl shadow p-6">
+                            <div class="text-center mb-6">
+                                <div class="w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-4"
+                                     :class="score >= 70 ? 'bg-green-100' : score >= 50 ? 'bg-yellow-100' : 'bg-red-100'">
+                                    <span class="text-3xl font-bold"
+                                          :class="score >= 70 ? 'text-green-600' : score >= 50 ? 'text-yellow-600' : 'text-red-600'"
+                                          x-text="Math.round(score) + '%'"></span>
+                                </div>
+                                <h3 class="text-2xl font-bold mb-2" x-text="score >= 70 ? 'Great Job!' : score >= 50 ? 'Good Effort!' : 'Keep Practicing!'"></h3>
+                                <p class="text-gray-600">You got <span x-text="correctAnswers"></span> out of <span x-text="questions.length"></span> correct</p>
+                            </div>
+
+                            <div class="space-y-4">
+                                <template x-for="(feedback, idx) in quizFeedback" :key="idx">
+                                    <div class="p-4 rounded-lg" :class="feedback.is_correct ? 'bg-green-50' : 'bg-red-50'">
+                                        <div class="flex items-start">
+                                            <i :class="feedback.is_correct ? 'fas fa-check-circle text-green-600' : 'fas fa-times-circle text-red-600'" class="mt-1 mr-3"></i>
+                                            <div>
+                                                <p class="font-medium" x-text="questions[idx]?.question"></p>
+                                                <p class="text-sm mt-1">Your answer: <span x-text="feedback.user_answer"></span></p>
+                                                <p x-show="!feedback.is_correct" class="text-sm text-green-600 mt-1">Correct: <span x-text="feedback.correct_answer"></span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="mt-6 flex justify-center space-x-4">
+                                <button @click="resetQuiz" class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-600">
+                                    <i class="fas fa-redo mr-2"></i>Try Again
+                                </button>
+                                <button @click="$dispatch('navigate', 'vocabulary')" class="px-6 py-3 border rounded-lg hover:bg-gray-50">
+                                    <i class="fas fa-book mr-2"></i>Learn More Words
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Translation Page -->
+            <div x-show="currentPage === 'translation'" x-cloak class="slide-enter">
+                <template x-if="currentPage === 'translation'">
+                    <div x-data="translationPage" x-init="init()">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Source -->
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <select x-model="sourceLang" class="border rounded-lg px-3 py-2">
+                                        <option value="en">English</option>
+                                        <option value="vi">Vietnamese</option>
+                                    </select>
+                                    <button @click="swapLanguages" class="p-2 text-gray-500 hover:text-primary">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </button>
+                                </div>
+                                <textarea x-model="sourceText"
+                                          placeholder="Enter text to translate..."
+                                          class="w-full h-48 p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                                <div class="flex items-center justify-between mt-4">
+                                    <span class="text-sm text-gray-500" x-text="sourceText.length + ' characters'"></span>
+                                    <button @click="translate"
+                                            :disabled="loading || !sourceText.trim()"
+                                            class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 transition-colors">
+                                        <span x-show="!loading"><i class="fas fa-language mr-2"></i>Translate</span>
+                                        <span x-show="loading"><div class="loading-spinner inline-block"></div></span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Target -->
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <select x-model="targetLang" class="border rounded-lg px-3 py-2">
+                                        <option value="vi">Vietnamese</option>
+                                        <option value="en">English</option>
+                                    </select>
+                                    <button @click="copyTranslation" x-show="translatedText" class="p-2 text-gray-500 hover:text-primary">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                                <div class="w-full h-48 p-4 border rounded-lg bg-gray-50 overflow-auto">
+                                    <p x-text="translatedText || 'Translation will appear here...'"
+                                       :class="translatedText ? 'text-gray-800' : 'text-gray-400'"></p>
+                                </div>
+                                <div class="mt-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Adjust Level (optional)</label>
+                                    <select x-model="adjustLevel" class="border rounded-lg px-3 py-2">
+                                        <option value="">No adjustment</option>
+                                        <option value="A1">Simplify to A1</option>
+                                        <option value="A2">Simplify to A2</option>
+                                        <option value="B1">Adjust to B1</option>
+                                        <option value="B2">Adjust to B2</option>
+                                        <option value="C1">Complexify to C1</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Translation History -->
+                        <div class="mt-6 bg-white rounded-xl shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Recent Translations</h3>
+                            <div class="space-y-3">
+                                <template x-for="item in history" :key="item.id">
+                                    <div class="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer" @click="loadTranslation(item)">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex-1 overflow-hidden">
+                                                <p class="text-sm text-gray-600 truncate" x-text="item.source_text"></p>
+                                                <p class="text-sm text-primary truncate" x-text="item.translated_text"></p>
+                                            </div>
+                                            <span class="text-xs text-gray-400 ml-4" x-text="item.source_lang.toUpperCase() + ' → ' + item.target_lang.toUpperCase()"></span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- SRS Review Page -->
+            <div x-show="currentPage === 'srs'" x-cloak class="slide-enter">
+                <template x-if="currentPage === 'srs'">
+                    <div x-data="srsPage" x-init="init()">
+                        <!-- Stats -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white rounded-xl shadow p-4 text-center">
+                                <p class="text-3xl font-bold text-primary" x-text="srsStats.dueNow"></p>
+                                <p class="text-sm text-gray-500">Due Now</p>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-4 text-center">
+                                <p class="text-3xl font-bold text-secondary" x-text="srsStats.dueToday"></p>
+                                <p class="text-sm text-gray-500">Due Today</p>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-4 text-center">
+                                <p class="text-3xl font-bold text-accent" x-text="srsStats.totalInSRS"></p>
+                                <p class="text-sm text-gray-500">In Review</p>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-4 text-center">
+                                <p class="text-3xl font-bold text-orange-500" x-text="srsStats.successRate + '%'"></p>
+                                <p class="text-sm text-gray-500">Success Rate</p>
+                            </div>
+                        </div>
+
+                        <!-- Review Session -->
+                        <div x-show="!reviewActive && dueReviews.length > 0" class="bg-white rounded-xl shadow p-6 text-center">
+                            <i class="fas fa-redo text-6xl text-primary mb-4"></i>
+                            <h3 class="text-2xl font-bold mb-2">Ready to Review?</h3>
+                            <p class="text-gray-600 mb-6">You have <span class="font-bold text-primary" x-text="dueReviews.length"></span> words due for review</p>
+                            <button @click="startReview" class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-600">
+                                <i class="fas fa-play mr-2"></i>Start Review
+                            </button>
+                        </div>
+
+                        <!-- No Reviews Due -->
+                        <div x-show="!reviewActive && dueReviews.length === 0" class="bg-white rounded-xl shadow p-6 text-center">
+                            <i class="fas fa-check-circle text-6xl text-secondary mb-4"></i>
+                            <h3 class="text-2xl font-bold mb-2">All Caught Up!</h3>
+                            <p class="text-gray-600">No words due for review. Learn some new words!</p>
+                        </div>
+
+                        <!-- Active Review -->
+                        <div x-show="reviewActive" class="bg-white rounded-xl shadow p-6">
+                            <div class="text-center mb-6">
+                                <span class="text-sm text-gray-500">Review <span x-text="currentReviewIndex + 1"></span> of <span x-text="dueReviews.length"></span></span>
+                            </div>
+
+                            <div x-show="currentReview" class="text-center mb-8">
+                                <h3 class="text-4xl font-bold text-primary mb-2" x-text="currentReview?.word"></h3>
+                                <p class="text-gray-500" x-text="currentReview?.pronunciation"></p>
+                                <button @click="speakWord(currentReview?.word)" class="mt-2 text-gray-400 hover:text-primary">
+                                    <i class="fas fa-volume-up text-2xl"></i>
+                                </button>
+                            </div>
+
+                            <div x-show="showAnswer" class="text-center mb-8 p-6 bg-gray-50 rounded-lg">
+                                <p class="text-2xl text-gray-800" x-text="currentReview?.meaning_vi"></p>
+                                <p class="text-gray-600 mt-2 italic" x-text="currentReview?.example_en"></p>
+                            </div>
+
+                            <div x-show="!showAnswer" class="text-center">
+                                <button @click="showAnswer = true" class="px-8 py-3 bg-primary text-white rounded-lg hover:bg-blue-600">
+                                    Show Answer
+                                </button>
+                            </div>
+
+                            <div x-show="showAnswer" class="grid grid-cols-4 gap-4">
+                                <button @click="submitReview(1)" class="p-4 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                                    <i class="fas fa-times mb-1"></i>
+                                    <p class="text-sm">Again</p>
+                                </button>
+                                <button @click="submitReview(2)" class="p-4 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+                                    <i class="fas fa-frown mb-1"></i>
+                                    <p class="text-sm">Hard</p>
+                                </button>
+                                <button @click="submitReview(3)" class="p-4 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                                    <i class="fas fa-smile mb-1"></i>
+                                    <p class="text-sm">Good</p>
+                                </button>
+                                <button @click="submitReview(4)" class="p-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                    <i class="fas fa-grin-stars mb-1"></i>
+                                    <p class="text-sm">Easy</p>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Chat Page -->
+            <div x-show="currentPage === 'chat'" x-cloak class="slide-enter">
+                <template x-if="currentPage === 'chat'">
+                    <div x-data="chatPage" x-init="init()">
+                        <div class="bg-white rounded-xl shadow h-[calc(100vh-200px)] flex flex-col">
+                            <!-- Chat Header -->
+                            <div class="p-4 border-b flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
+                                        <i class="fas fa-robot"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3 class="font-semibold">English Tutor</h3>
+                                        <p class="text-xs text-gray-500">AI-powered conversation practice</p>
+                                    </div>
+                                </div>
+                                <button @click="clearChat" class="text-gray-400 hover:text-red-500">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+
+                            <!-- Chat Messages -->
+                            <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chatMessages">
+                                <template x-for="msg in messages" :key="msg.id">
+                                    <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
+                                        <div :class="msg.role === 'user' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-800'"
+                                             class="max-w-[80%] rounded-lg p-4">
+                                            <p x-text="msg.message"></p>
+                                            <div x-show="msg.corrections && msg.corrections.length > 0" class="mt-2 pt-2 border-t border-gray-300">
+                                                <p class="text-xs font-semibold mb-1">Corrections:</p>
+                                                <template x-for="c in msg.corrections" :key="c.original">
+                                                    <p class="text-xs"><s x-text="c.original"></s> → <span class="font-medium" x-text="c.corrected"></span></p>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <div x-show="loading" class="flex justify-start">
+                                    <div class="bg-gray-100 rounded-lg p-4">
+                                        <div class="loading-spinner"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Chat Input -->
+                            <div class="p-4 border-t">
+                                <div class="flex space-x-4">
+                                    <input type="text"
+                                           x-model="inputMessage"
+                                           @keyup.enter="sendMessage"
+                                           placeholder="Type your message..."
+                                           class="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <button @click="sendMessage"
+                                            :disabled="loading || !inputMessage.trim()"
+                                            class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Placeholder for other pages -->
+            <div x-show="['exercises', 'reading', 'writing', 'flashcards', 'errors', 'learning-paths'].includes(currentPage)" x-cloak>
+                <div class="bg-white rounded-xl shadow p-12 text-center">
+                    <i class="fas fa-tools text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2" x-text="pageTitle"></h3>
+                    <p class="text-gray-500">This feature is available. Navigate to explore!</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div class="fixed bottom-4 right-4 z-50 space-y-2">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div class="px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 slide-enter"
+                 :class="toast.type === 'success' ? 'bg-green-500 text-white' : toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'">
+                <i :class="toast.type === 'success' ? 'fas fa-check-circle' : toast.type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-info-circle'"></i>
+                <span x-text="toast.message"></span>
+            </div>
+        </template>
+    </div>
+
+    <!-- Main App Script -->
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+"""Database models package."""
+
+from app.models.db_models import (
+    Vocabulary,
+    UserVocabulary,
+    Quiz,
+    QuizError,
+    Translation,
+    UserSettings,
+    ChatHistory,
+    ReadingPassage,
+    ReadingAttempt,
+    WritingSubmission,
+    Flashcard,
+    ErrorPattern,
+    LearningPath,
+    PathEnrollment,
+    Exercise,
+    ExerciseAttempt,
+    StudySession,
+)
+
+__all__ = [
+    "Vocabulary",
+    "UserVocabulary",
+    "Quiz",
+    "QuizError",
+    "Translation",
+    "UserSettings",
+    "ChatHistory",
+    "ReadingPassage",
+    "ReadingAttempt",
+    "WritingSubmission",
+    "Flashcard",
+    "ErrorPattern",
+    "LearningPath",
+    "PathEnrollment",
+    "Exercise",
+    "ExerciseAttempt",
+    "StudySession",
+]
