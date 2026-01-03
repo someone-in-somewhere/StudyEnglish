@@ -12,12 +12,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.pool import StaticPool
 
-from app.config import settings, ensure_directories
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 # Ensure data directory exists
-ensure_directories()
+settings.DATA_DIR.mkdir(parents=True, exist_ok=True)
+settings.AI_MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Create synchronous engine for initialization
 sync_engine = create_engine(

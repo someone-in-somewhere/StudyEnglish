@@ -15,21 +15,40 @@ class Settings(BaseSettings):
     # Application
     APP_NAME: str = "StudyEnglish"
     APP_VERSION: str = "1.0.0"
-    DEBUG: bool = False
+    DEBUG: bool = True  # Enable debug mode
 
     # Server
     HOST: str = "127.0.0.1"
     PORT: int = 8000
 
-    # Paths
-    BASE_DIR: Path = Path(__file__).parent.parent.parent
-    DATA_DIR: Path = BASE_DIR.parent / "data"
-    AI_MODELS_DIR: Path = BASE_DIR / "ai_models"
-    FRONTEND_DIR: Path = BASE_DIR.parent / "frontend"
+    # Paths - calculated at runtime
+    @property
+    def BASE_DIR(self) -> Path:
+        return Path(__file__).parent.parent.resolve()
 
-    # Database
-    DATABASE_URL: str = f"sqlite:///{BASE_DIR.parent / 'data' / 'study_english.db'}"
-    DATABASE_ASYNC_URL: str = f"sqlite+aiosqlite:///{BASE_DIR.parent / 'data' / 'study_english.db'}"
+    @property
+    def PROJECT_DIR(self) -> Path:
+        return self.BASE_DIR.parent
+
+    @property
+    def DATA_DIR(self) -> Path:
+        return self.PROJECT_DIR / "data"
+
+    @property
+    def AI_MODELS_DIR(self) -> Path:
+        return self.BASE_DIR / "ai_models"
+
+    @property
+    def FRONTEND_DIR(self) -> Path:
+        return self.PROJECT_DIR / "frontend"
+
+    @property
+    def DATABASE_URL(self) -> str:
+        return f"sqlite:///{self.DATA_DIR / 'study_english.db'}"
+
+    @property
+    def DATABASE_ASYNC_URL(self) -> str:
+        return f"sqlite+aiosqlite:///{self.DATA_DIR / 'study_english.db'}"
 
     # AI Model Paths (relative to AI_MODELS_DIR)
     QWEN_MODEL_PATH: str = "qwen2.5-7b-instruct-q4_k_m.gguf"
