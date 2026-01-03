@@ -58,10 +58,10 @@ class Settings(BaseSettings):
     MULTILINGUAL_MODEL: str = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
 
     # AI Model Settings
-    QWEN_N_CTX: int = 4096
-    QWEN_N_THREADS: int = 4
+    QWEN_N_CTX: int = 2048  # Reduced for faster inference
+    QWEN_N_THREADS: int = 8  # Use more CPU cores
     QWEN_N_GPU_LAYERS: int = 0  # Set > 0 for GPU acceleration
-    MAX_TOKENS: int = 2048
+    MAX_TOKENS: int = 1024  # Reduced default
     TEMPERATURE: float = 0.7
 
     # Performance

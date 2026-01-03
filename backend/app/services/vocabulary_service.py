@@ -49,10 +49,12 @@ class VocabularyService:
         prompt = self._build_vocabulary_prompt(topic, level, num_words)
 
         # Generate using AI
+        # Each word ~120 tokens, add buffer
+        tokens_needed = min(num_words * 150, 1500)
         try:
             response = ai_manager.generate_text(
                 prompt,
-                max_tokens=2048,
+                max_tokens=tokens_needed,
                 temperature=0.7
             )
 
