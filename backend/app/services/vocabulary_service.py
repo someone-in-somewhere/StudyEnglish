@@ -83,67 +83,68 @@ class VocabularyService:
 
         level_desc = level_descriptions.get(level, "intermediate level vocabulary")
 
-        prompt = f"""Generate {num_words} English vocabulary words for topic "{topic}" at {level} level ({level_desc}).
+        prompt = f"""You are an English vocabulary generator. Generate {num_words} vocabulary words for topic "{topic}" at {level} level.
 
-Return a JSON array of objects. Each object must use curly braces {{}}.
+For each word, output ONE JSON object per line with these fields:
+- word: English word
+- meaning_vi: Vietnamese meaning
+- pronunciation: IPA (e.g. /wɜːd/)
+- part_of_speech: noun/verb/adjective/adverb
+- example_en: Example sentence in English
+- example_vi: Vietnamese translation
+- synonyms: 2 synonyms
 
-Example format:
-[
-  {{"word": "example", "meaning_vi": "ví dụ", "pronunciation": "/ɪɡˈzæmpəl/", "part_of_speech": "noun", "example_en": "This is an example.", "example_vi": "Đây là một ví dụ.", "synonyms": "instance, sample"}}
-]
+Output format - one complete JSON object per line:
+{{"word": "hello", "meaning_vi": "xin chào", "pronunciation": "/həˈləʊ/", "part_of_speech": "noun", "example_en": "Hello everyone.", "example_vi": "Xin chào mọi người.", "synonyms": "hi, greetings"}}
 
-Now generate {num_words} words for "{topic}" at {level} level. Output ONLY valid JSON array:
-[
-  {{"""
+Generate {num_words} words now:
+{{"word": """"
 
         return prompt
 
     def _parse_vocabulary_response(self, response: str) -> List[Dict[str, Any]]:
         """Parse the AI response into vocabulary list."""
         try:
-            # The prompt ends with "[\n  {" so response continues from there
-            # Prepend the opening to make valid JSON
-            json_str = '[{' + response.strip()
+            # The prompt ends with '{"word": "' so prepend that
+            full_response = '{"word": "' + response.strip()
 
-            # Fix common AI output issues
-            # Convert ["key": value] to {"key": value}
-            json_str = re.sub(r'\[("word")', r'{\1', json_str)
-            json_str = re.sub(r'("synonyms":\s*"[^"]*")\s*\]', r'\1}', json_str)
+            # Parse line by line - each line should be a JSON object
+            vocabulary = []
 
-            # Find the end of valid JSON array
-            bracket_count = 0
-            brace_count = 0
-            end_pos = len(json_str)
+            # Find all JSON objects in the response
+            # Pattern to match complete JSON objects
+            json_pattern = r'\{[^{}]*"word"[^{}]*\}'
+            matches = re.findall(json_pattern, full_response)
 
-            for i, char in enumerate(json_str):
-                if char == '[':
-                    bracket_count += 1
-                elif char == ']':
-                    bracket_count -= 1
-                    if bracket_count == 0:
-                        end_pos = i + 1
-                        break
-                elif char == '{':
-                    brace_count += 1
-                elif char == '}':
-                    brace_count -= 1
+            for match in matches:
+                try:
+                    # Clean up the match
+                    cleaned = match.strip()
+                    # Fix common issues
+                    cleaned = re.sub(r',\s*}', '}', cleaned)
+                    cleaned = re.sub(r'"\s*,\s*"', '", "', cleaned)
 
-            json_str = json_str[:end_pos]
+                    obj = json.loads(cleaned)
+                    if "word" in obj:
+                        vocabulary.append(obj)
+                except json.JSONDecodeError:
+                    continue
 
-            # Ensure proper closing
-            if not json_str.rstrip().endswith(']'):
-                # Close any open braces first
-                while brace_count > 0:
-                    json_str += '}'
-                    brace_count -= 1
-                json_str += ']'
-
-            # Clean up common issues
-            json_str = re.sub(r',\s*]', ']', json_str)  # Remove trailing commas
-            json_str = re.sub(r',\s*}', '}', json_str)
-            json_str = re.sub(r'}\s*{', '},{', json_str)  # Add missing commas between objects
-
-            vocabulary = json.loads(json_str)
+            # If regex didn't work, try line-by-line parsing
+            if not vocabulary:
+                lines = full_response.split('\n')
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith('{') and 'word' in line:
+                        # Ensure it ends with }
+                        if not line.endswith('}'):
+                            line = line.rstrip(',') + '}'
+                        try:
+                            obj = json.loads(line)
+                            if "word" in obj:
+                                vocabulary.append(obj)
+                        except json.JSONDecodeError:
+                            continue
 
             # Validate and clean each entry
             cleaned = []
