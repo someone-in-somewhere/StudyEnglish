@@ -16,7 +16,7 @@ from app.models.schemas import (
 router = APIRouter(prefix="/api/vocabulary", tags=["vocabulary"])
 
 
-@router.post("/generate", response_model=VocabularyGenerateResponse)
+@router.post("/generate")
 def generate_vocabulary(
     request: VocabularyGenerateRequest,
     db: Session = Depends(get_sync_session)
@@ -31,11 +31,11 @@ def generate_vocabulary(
         topic_id=request.topic_id
     )
 
-    return VocabularyGenerateResponse(
-        success=True,
-        vocabulary=vocabulary,
-        count=len(vocabulary)
-    )
+    return {
+        "success": True,
+        "vocabulary": vocabulary,
+        "count": len(vocabulary)
+    }
 
 
 @router.post("/mark-learned", response_model=BaseResponse)

@@ -314,9 +314,15 @@ document.addEventListener('alpine:init', () => {
                     })
                 });
 
-                if (response.success) {
+                console.log('Vocabulary response:', response);
+
+                if (response.success && response.vocabulary) {
                     this.vocabulary = response.vocabulary;
+                    console.log('Vocabulary loaded:', this.vocabulary.length, 'words');
                     Alpine.store('app')?.showToast?.(`Generated ${response.count} words!`, 'success');
+                } else {
+                    console.error('Response invalid:', response);
+                    Alpine.store('app')?.showToast?.('No vocabulary generated', 'error');
                 }
             } catch (error) {
                 console.error('Failed to generate vocabulary:', error);

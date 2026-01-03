@@ -45,18 +45,28 @@ class Vocabulary(Base):
 
     def to_dict(self):
         """Convert to dictionary."""
+        # Parse synonyms safely
+        synonyms = []
+        if self.synonyms:
+            try:
+                synonyms = json.loads(self.synonyms)
+                if not isinstance(synonyms, list):
+                    synonyms = []
+            except (json.JSONDecodeError, TypeError):
+                synonyms = []
+
         return {
             "id": self.id,
-            "word": self.word,
-            "meaning_vi": self.meaning_vi,
-            "pronunciation": self.pronunciation,
-            "part_of_speech": self.part_of_speech,
-            "level": self.level,
-            "topic": self.topic,
+            "word": self.word or "",
+            "meaning_vi": self.meaning_vi or "",
+            "pronunciation": self.pronunciation or "",
+            "part_of_speech": self.part_of_speech or "noun",
+            "level": self.level or "B1",
+            "topic": self.topic or "",
             "topic_id": self.topic_id,
-            "example_en": self.example_en,
-            "example_vi": self.example_vi,
-            "synonyms": json.loads(self.synonyms) if self.synonyms else [],
+            "example_en": self.example_en or "",
+            "example_vi": self.example_vi or "",
+            "synonyms": synonyms,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
 
