@@ -87,59 +87,65 @@ class VocabularyService:
 
         level_desc = level_descriptions.get(level, "intermediate level vocabulary")
 
-        prompt = f"""Generate exactly {num_words} English vocabulary words for the topic "{topic}" at CEFR {level} level ({level_desc}).
+        prompt = f"""Generate {num_words} English vocabulary words for topic "{topic}" at {level} level ({level_desc}).
 
-For each word, provide the following in a valid JSON array format:
-- word: the English word
-- meaning_vi: Vietnamese translation/meaning
-- pronunciation: IPA pronunciation (e.g., /wɜːrd/)
-- part_of_speech: noun, verb, adjective, or adverb
-- example_en: an example sentence in English using the word
-- example_vi: Vietnamese translation of the example sentence
-- synonyms: 2-3 synonyms as a comma-separated string
+Return a JSON array of objects. Each object must use curly braces {{}}.
 
-Important:
-- Words should be appropriate for {level} level learners
-- Provide accurate Vietnamese translations
-- Use proper IPA notation for pronunciation
-- Make example sentences natural and useful
-- Output ONLY the JSON array, no other text
+Example format:
+[
+  {{"word": "example", "meaning_vi": "ví dụ", "pronunciation": "/ɪɡˈzæmpəl/", "part_of_speech": "noun", "example_en": "This is an example.", "example_vi": "Đây là một ví dụ.", "synonyms": "instance, sample"}}
+]
 
-Output JSON array:
-["""
+Now generate {num_words} words for "{topic}" at {level} level. Output ONLY valid JSON array:
+[
+  {{"""
 
         return prompt
 
     def _parse_vocabulary_response(self, response: str) -> List[Dict[str, Any]]:
         """Parse the AI response into vocabulary list."""
         try:
-            # Try to extract JSON from response
-            # Add the opening bracket if response doesn't start with it
-            if not response.strip().startswith("["):
-                response = "[" + response
+            # The prompt ends with "[\n  {" so response continues from there
+            # Prepend the opening to make valid JSON
+            json_str = '[{' + response.strip()
 
-            # Find the complete JSON array
-            # Look for balanced brackets
+            # Fix common AI output issues
+            # Convert ["key": value] to {"key": value}
+            json_str = re.sub(r'\[("word")', r'{\1', json_str)
+            json_str = re.sub(r'("synonyms":\s*"[^"]*")\s*\]', r'\1}', json_str)
+
+            # Find the end of valid JSON array
             bracket_count = 0
-            end_pos = 0
+            brace_count = 0
+            end_pos = len(json_str)
 
-            for i, char in enumerate(response):
-                if char == "[":
+            for i, char in enumerate(json_str):
+                if char == '[':
                     bracket_count += 1
-                elif char == "]":
+                elif char == ']':
                     bracket_count -= 1
                     if bracket_count == 0:
                         end_pos = i + 1
                         break
+                elif char == '{':
+                    brace_count += 1
+                elif char == '}':
+                    brace_count -= 1
 
-            if end_pos > 0:
-                json_str = response[:end_pos]
-            else:
-                json_str = response + "]"
+            json_str = json_str[:end_pos]
+
+            # Ensure proper closing
+            if not json_str.rstrip().endswith(']'):
+                # Close any open braces first
+                while brace_count > 0:
+                    json_str += '}'
+                    brace_count -= 1
+                json_str += ']'
 
             # Clean up common issues
             json_str = re.sub(r',\s*]', ']', json_str)  # Remove trailing commas
             json_str = re.sub(r',\s*}', '}', json_str)
+            json_str = re.sub(r'}\s*{', '},{', json_str)  # Add missing commas between objects
 
             vocabulary = json.loads(json_str)
 
