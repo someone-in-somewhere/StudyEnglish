@@ -2,6 +2,7 @@
 
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_sync_session
@@ -36,6 +37,32 @@ def generate_vocabulary(
         "vocabulary": vocabulary,
         "count": len(vocabulary)
     }
+
+
+class VocabularyImportRequest(BaseModel):
+    """Request to import vocabulary from AI response."""
+    topic: str
+    level: str
+    ai_response: str
+    topic_id: Optional[int] = None
+
+
+@router.post("/import")
+def import_vocabulary(
+    request: VocabularyImportRequest,
+    db: Session = Depends(get_sync_session)
+):
+    """Import vocabulary from external AI response."""
+    service = VocabularyService(db)
+
+    result = service.import_vocabulary(
+        topic=request.topic,
+        level=request.level,
+        ai_response=request.ai_response,
+        topic_id=request.topic_id
+    )
+
+    return result
 
 
 @router.post("/mark-learned", response_model=BaseResponse)

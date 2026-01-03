@@ -253,6 +253,146 @@ Generate {num_words} words for "{topic}" at {level} level:
         words = fallback_words.get(level, fallback_words["B1"])
         return words[:num_words]
 
+    def import_vocabulary(
+        self,
+        topic: str,
+        level: str,
+        ai_response: str,
+        topic_id: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        Import vocabulary from external AI response.
+        Parses JSON, filters duplicates, and saves to database.
+
+        Args:
+            topic: Topic name
+            level: CEFR level
+            ai_response: Raw AI response containing JSON vocabulary
+            topic_id: Optional topic ID
+
+        Returns:
+            Dict with success status, added count, duplicates count, and vocabulary list
+        """
+        try:
+            # Parse the AI response
+            vocabulary_list = self._parse_ai_response(ai_response)
+
+            if not vocabulary_list:
+                return {
+                    "success": False,
+                    "message": "Could not parse vocabulary from AI response. Please check the JSON format.",
+                    "added": 0,
+                    "duplicates": 0,
+                    "vocabulary": []
+                }
+
+            added = 0
+            duplicates = 0
+            saved_vocabulary = []
+
+            for vocab_data in vocabulary_list:
+                # Check if word already exists
+                existing = (
+                    self.db.query(Vocabulary)
+                    .filter(
+                        and_(
+                            Vocabulary.word == vocab_data.get("word", ""),
+                            Vocabulary.topic == topic,
+                            Vocabulary.level == level
+                        )
+                    )
+                    .first()
+                )
+
+                if existing:
+                    duplicates += 1
+                    saved_vocabulary.append(existing.to_dict())
+                    continue
+
+                # Save new vocabulary
+                vocab = self._save_vocabulary(vocab_data, topic, level, topic_id)
+                if vocab:
+                    added += 1
+                    saved_vocabulary.append(vocab.to_dict())
+
+            logger.info(f"Imported vocabulary: {added} added, {duplicates} duplicates for {topic} at {level}")
+
+            return {
+                "success": True,
+                "added": added,
+                "duplicates": duplicates,
+                "vocabulary": saved_vocabulary
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to import vocabulary: {e}")
+            return {
+                "success": False,
+                "message": f"Error importing vocabulary: {str(e)}",
+                "added": 0,
+                "duplicates": 0,
+                "vocabulary": []
+            }
+
+    def _parse_ai_response(self, ai_response: str) -> List[Dict[str, Any]]:
+        """Parse AI response to extract vocabulary JSON."""
+        try:
+            text = ai_response.strip()
+
+            # Try to find JSON array in the response
+            # Look for [ ... ] pattern
+            start_idx = text.find('[')
+            end_idx = text.rfind(']')
+
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                json_str = text[start_idx:end_idx + 1]
+                vocabulary = json.loads(json_str)
+
+                if isinstance(vocabulary, list):
+                    # Validate and clean each entry
+                    cleaned = []
+                    for vocab in vocabulary:
+                        if isinstance(vocab, dict) and "word" in vocab:
+                            cleaned_vocab = {
+                                "word": str(vocab.get("word", "")).strip(),
+                                "meaning_vi": str(vocab.get("meaning_vi", "")).strip(),
+                                "pronunciation": str(vocab.get("pronunciation", "")).strip(),
+                                "part_of_speech": str(vocab.get("part_of_speech", "noun")).strip().lower(),
+                                "example_en": str(vocab.get("example_en", "")).strip(),
+                                "example_vi": str(vocab.get("example_vi", "")).strip(),
+                                "synonyms": vocab.get("synonyms", "")
+                            }
+
+                            # Validate part of speech
+                            if cleaned_vocab["part_of_speech"] not in ["noun", "verb", "adjective", "adverb"]:
+                                cleaned_vocab["part_of_speech"] = "noun"
+
+                            cleaned.append(cleaned_vocab)
+
+                    return cleaned
+
+            # If no array found, try parsing individual JSON objects
+            json_pattern = r'\{[^{}]*"word"[^{}]*\}'
+            matches = re.findall(json_pattern, text)
+
+            vocabulary = []
+            for match in matches:
+                try:
+                    obj = json.loads(match)
+                    if "word" in obj:
+                        vocabulary.append(obj)
+                except json.JSONDecodeError:
+                    continue
+
+            return vocabulary
+
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parse error: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Error parsing AI response: {e}")
+            return []
+
     def mark_as_learned(self, vocabulary_id: int) -> Optional[UserVocabulary]:
         """
         Mark a vocabulary word as learned.

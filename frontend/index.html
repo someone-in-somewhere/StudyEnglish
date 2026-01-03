@@ -308,17 +308,62 @@
                                     <p class="text-sm text-gray-500 text-center" x-text="numWords + ' words'"></p>
                                 </div>
                             </div>
-                            <button @click="generateVocabulary"
-                                    :disabled="loading || !selectedTopic"
+                            <button @click="generatePrompt"
+                                    :disabled="!selectedTopic"
                                     class="w-full md:w-auto px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
-                                <span x-show="!loading">
-                                    <i class="fas fa-magic mr-2"></i>Generate Vocabulary
-                                </span>
-                                <span x-show="loading" class="flex items-center">
-                                    <div class="loading-spinner mr-2"></div>
-                                    Generating...
-                                </span>
+                                <i class="fas fa-copy mr-2"></i>Get Prompt
                             </button>
+                        </div>
+
+                        <!-- Prompt Display -->
+                        <div x-show="generatedPrompt" class="bg-white rounded-xl shadow p-6 mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold">Step 1: Copy this prompt</h3>
+                                <button @click="copyPrompt" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">
+                                    <i class="fas fa-copy mr-1"></i>Copy
+                                </button>
+                            </div>
+                            <textarea readonly
+                                      x-model="generatedPrompt"
+                                      class="w-full h-48 p-4 border rounded-lg bg-gray-50 text-sm font-mono resize-none"></textarea>
+                            <p class="text-sm text-gray-500 mt-2">
+                                <i class="fas fa-arrow-right mr-1"></i>Paste this prompt into ChatGPT, Claude, or any AI assistant
+                            </p>
+                        </div>
+
+                        <!-- AI Response Input -->
+                        <div x-show="generatedPrompt" class="bg-white rounded-xl shadow p-6 mb-6">
+                            <h3 class="text-lg font-semibold mb-4">Step 2: Paste AI response here</h3>
+                            <textarea x-model="aiResponse"
+                                      placeholder="Paste the vocabulary JSON from AI here..."
+                                      class="w-full h-48 p-4 border rounded-lg text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                            <div class="flex items-center justify-between mt-4">
+                                <p class="text-sm text-gray-500">
+                                    <i class="fas fa-info-circle mr-1"></i>Paste the JSON output from the AI
+                                </p>
+                                <button @click="saveVocabulary"
+                                        :disabled="!aiResponse || loading"
+                                        class="px-6 py-3 bg-secondary text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
+                                    <span x-show="!loading">
+                                        <i class="fas fa-save mr-2"></i>Save Vocabulary
+                                    </span>
+                                    <span x-show="loading" class="flex items-center">
+                                        <div class="loading-spinner mr-2"></div>
+                                        Saving...
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Save Result -->
+                        <div x-show="saveResult" class="bg-white rounded-xl shadow p-6 mb-6">
+                            <div class="flex items-center mb-4">
+                                <i class="fas fa-check-circle text-green-500 text-2xl mr-3"></i>
+                                <div>
+                                    <h3 class="text-lg font-semibold">Vocabulary Saved!</h3>
+                                    <p class="text-sm text-gray-500" x-text="'Added ' + saveResult.added + ' new words, ' + saveResult.duplicates + ' duplicates skipped'"></p>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Topics Grid -->
@@ -335,9 +380,9 @@
                             </template>
                         </div>
 
-                        <!-- Generated Vocabulary -->
+                        <!-- Saved Vocabulary List -->
                         <div x-show="vocabulary.length > 0" class="space-y-4">
-                            <h3 class="text-lg font-semibold">Generated Vocabulary</h3>
+                            <h3 class="text-lg font-semibold">Saved Vocabulary</h3>
                             <template x-for="word in vocabulary" :key="word.id">
                                 <div class="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
                                     <div class="flex flex-wrap items-start justify-between">

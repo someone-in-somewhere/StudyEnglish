@@ -278,6 +278,9 @@ document.addEventListener('alpine:init', () => {
         selectedLevel: 'B1',
         numWords: 10,
         loading: false,
+        generatedPrompt: '',
+        aiResponse: '',
+        saveResult: null,
 
         async init() {
             await this.loadTopics();
@@ -299,34 +302,87 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        async generateVocabulary() {
+        generatePrompt() {
             if (!this.selectedTopic) return;
 
+            this.saveResult = null;
+            this.aiResponse = '';
+
+            const levelDescriptions = {
+                'A1': 'very basic, everyday words for beginners',
+                'A2': 'elementary level, simple and common words',
+                'B1': 'intermediate level, practical vocabulary for daily use',
+                'B2': 'upper-intermediate, more complex and nuanced vocabulary',
+                'C1': 'advanced vocabulary including idiomatic expressions',
+                'C2': 'proficiency level, sophisticated and specialized vocabulary'
+            };
+
+            const levelDesc = levelDescriptions[this.selectedLevel] || 'intermediate level vocabulary';
+
+            this.generatedPrompt = `Generate ${this.numWords} English vocabulary words for the topic "${this.selectedTopic}" at ${this.selectedLevel} level (${levelDesc}).
+
+For each word, provide a JSON object with these exact fields:
+- word: the English word
+- meaning_vi: Vietnamese translation/meaning
+- pronunciation: IPA pronunciation (e.g., /wɜːrd/)
+- part_of_speech: noun, verb, adjective, or adverb
+- example_en: an example sentence in English
+- example_vi: Vietnamese translation of the example
+- synonyms: 2-3 synonyms separated by comma
+
+Output as a JSON array. Example format:
+[
+  {
+    "word": "collaborate",
+    "meaning_vi": "hợp tác, cộng tác",
+    "pronunciation": "/kəˈlæbəreɪt/",
+    "part_of_speech": "verb",
+    "example_en": "We need to collaborate with other teams to finish this project.",
+    "example_vi": "Chúng ta cần hợp tác với các đội khác để hoàn thành dự án này.",
+    "synonyms": "cooperate, work together, team up"
+  }
+]
+
+Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLevel} level. Output ONLY the JSON array, no explanation.`;
+        },
+
+        copyPrompt() {
+            navigator.clipboard.writeText(this.generatedPrompt);
+            Alpine.store('app')?.showToast?.('Prompt copied to clipboard!', 'success');
+        },
+
+        async saveVocabulary() {
+            if (!this.aiResponse.trim()) return;
+
             this.loading = true;
+            this.saveResult = null;
 
             try {
-                const response = await fetchAPI('/vocabulary/generate', {
+                const response = await fetchAPI('/vocabulary/import', {
                     method: 'POST',
                     body: JSON.stringify({
                         topic: this.selectedTopic,
                         level: this.selectedLevel,
-                        num_words: parseInt(this.numWords)
+                        ai_response: this.aiResponse
                     })
                 });
 
-                console.log('Vocabulary response:', response);
+                console.log('Save response:', response);
 
-                if (response.success && response.vocabulary) {
-                    this.vocabulary = response.vocabulary;
-                    console.log('Vocabulary loaded:', this.vocabulary.length, 'words');
-                    Alpine.store('app')?.showToast?.(`Generated ${response.count} words!`, 'success');
+                if (response.success) {
+                    this.saveResult = {
+                        added: response.added,
+                        duplicates: response.duplicates
+                    };
+                    this.vocabulary = response.vocabulary || [];
+                    this.aiResponse = '';
+                    Alpine.store('app')?.showToast?.(`Saved ${response.added} new words!`, 'success');
                 } else {
-                    console.error('Response invalid:', response);
-                    Alpine.store('app')?.showToast?.('No vocabulary generated', 'error');
+                    Alpine.store('app')?.showToast?.(response.message || 'Failed to save vocabulary', 'error');
                 }
             } catch (error) {
-                console.error('Failed to generate vocabulary:', error);
-                Alpine.store('app')?.showToast?.('Failed to generate vocabulary', 'error');
+                console.error('Failed to save vocabulary:', error);
+                Alpine.store('app')?.showToast?.('Failed to save vocabulary. Check JSON format.', 'error');
             } finally {
                 this.loading = false;
             }
