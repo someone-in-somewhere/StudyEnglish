@@ -83,7 +83,7 @@ class VocabularyService:
 
         level_desc = level_descriptions.get(level, "intermediate level vocabulary")
 
-        prompt = f"""You are an English vocabulary generator. Generate {num_words} vocabulary words for topic "{topic}" at {level} level.
+        prompt = f'''You are an English vocabulary generator. Generate {num_words} vocabulary words for topic "{topic}" at {level} level.
 
 For each word, output ONE JSON object per line with these fields:
 - word: English word
@@ -97,16 +97,15 @@ For each word, output ONE JSON object per line with these fields:
 Output format - one complete JSON object per line:
 {{"word": "hello", "meaning_vi": "xin chào", "pronunciation": "/həˈləʊ/", "part_of_speech": "noun", "example_en": "Hello everyone.", "example_vi": "Xin chào mọi người.", "synonyms": "hi, greetings"}}
 
-Generate {num_words} words now:
-{{"word": """"
+Generate {num_words} words for "{topic}" at {level} level:
+'''
 
         return prompt
 
     def _parse_vocabulary_response(self, response: str) -> List[Dict[str, Any]]:
         """Parse the AI response into vocabulary list."""
         try:
-            # The prompt ends with '{"word": "' so prepend that
-            full_response = '{"word": "' + response.strip()
+            full_response = response.strip()
 
             # Parse line by line - each line should be a JSON object
             vocabulary = []
