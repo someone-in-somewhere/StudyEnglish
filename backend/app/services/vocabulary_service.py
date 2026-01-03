@@ -15,6 +15,7 @@ from sqlalchemy import func, and_, or_
 from app.config import settings, TOPICS
 from app.models.db_models import Vocabulary, UserVocabulary
 from app.services.ai_model_manager import ai_manager
+from app.data.vocabulary_data import VOCABULARY_DATA
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class VocabularyService:
         topic_id: Optional[int] = None
     ) -> List[Dict[str, Any]]:
         """
-        Generate vocabulary words using AI for a specific topic and level.
+        Generate vocabulary words from pre-built database for instant results.
 
         Args:
             topic: Topic name (e.g., "Work and Business")
@@ -45,12 +46,36 @@ class VocabularyService:
         Returns:
             List of vocabulary dictionaries
         """
-        # Build the prompt for Qwen
-        prompt = self._build_vocabulary_prompt(topic, level, num_words)
+        # Use pre-built vocabulary data for instant results
+        saved_vocabulary = []
 
-        # Generate using AI
-        # Each word ~120 tokens, add buffer
+        # Get vocabulary from pre-built data
+        if topic in VOCABULARY_DATA and level in VOCABULARY_DATA[topic]:
+            vocab_list = VOCABULARY_DATA[topic][level][:num_words]
+
+            for vocab_data in vocab_list:
+                vocab = self._save_vocabulary(vocab_data, topic, level, topic_id)
+                if vocab:
+                    saved_vocabulary.append(vocab.to_dict())
+
+            logger.info(f"Loaded {len(saved_vocabulary)} vocabulary words for {topic} at {level}")
+            return saved_vocabulary
+
+        # Fallback to AI generation if topic not in pre-built data
+        logger.info(f"Topic {topic} not in pre-built data, using AI generation")
+        return self._generate_with_ai(topic, level, num_words, topic_id)
+
+    def _generate_with_ai(
+        self,
+        topic: str,
+        level: str,
+        num_words: int,
+        topic_id: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
+        """Generate vocabulary using AI model (slower fallback)."""
+        prompt = self._build_vocabulary_prompt(topic, level, num_words)
         tokens_needed = min(num_words * 150, 1500)
+
         try:
             response = ai_manager.generate_text(
                 prompt,
@@ -58,22 +83,19 @@ class VocabularyService:
                 temperature=0.7
             )
 
-            # Parse the response
             vocabulary_list = self._parse_vocabulary_response(response)
 
-            # Save to database
             saved_vocabulary = []
             for vocab_data in vocabulary_list[:num_words]:
                 vocab = self._save_vocabulary(vocab_data, topic, level, topic_id)
                 if vocab:
                     saved_vocabulary.append(vocab.to_dict())
 
-            logger.info(f"Generated {len(saved_vocabulary)} vocabulary words for {topic} at {level}")
+            logger.info(f"AI generated {len(saved_vocabulary)} vocabulary words for {topic} at {level}")
             return saved_vocabulary
 
         except Exception as e:
-            logger.error(f"Vocabulary generation failed: {e}")
-            # Return fallback vocabulary
+            logger.error(f"AI vocabulary generation failed: {e}")
             return self._get_fallback_vocabulary(topic, level, num_words)
 
     def _build_vocabulary_prompt(self, topic: str, level: str, num_words: int) -> str:

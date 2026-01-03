@@ -51,7 +51,7 @@ class VocabularyGenerateRequest(BaseModel):
     topic: str
     topic_id: Optional[int] = None
     level: str = Field(..., pattern="^(A1|A2|B1|B2|C1|C2)$")
-    num_words: int = Field(default=5, ge=3, le=10)  # Reduced for faster CPU generation
+    num_words: int = Field(default=10, ge=1, le=20)  # Instant with pre-built data
 
 
 class VocabularyGenerateResponse(BaseResponse):
