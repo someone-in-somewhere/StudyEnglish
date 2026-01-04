@@ -295,6 +295,7 @@ document.addEventListener('alpine:init', () => {
             if (!dateStr) return '';
             const date = new Date(dateStr);
             return date.toLocaleDateString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
@@ -487,6 +488,7 @@ document.addEventListener('alpine:init', () => {
             if (!dateStr) return '';
             const date = new Date(dateStr);
             return date.toLocaleDateString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
@@ -799,6 +801,7 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
             if (!isoDate) return '-';
             const date = new Date(isoDate);
             return date.toLocaleDateString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
@@ -1050,7 +1053,7 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
         formatStatDate(isoDate) {
             if (!isoDate) return '-';
             const date = new Date(isoDate);
-            return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            return date.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric' });
         },
 
         async loadTranslationHistory() {
@@ -1117,6 +1120,7 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
             if (!dateStr) return '';
             const date = new Date(dateStr);
             return date.toLocaleDateString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
@@ -1273,7 +1277,7 @@ Your translation:`;
         formatStatDate(isoDate) {
             if (!isoDate) return '-';
             const date = new Date(isoDate);
-            return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            return date.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric' });
         },
 
         getStylesList(styles) {
@@ -1344,6 +1348,7 @@ Your translation:`;
             if (!dateStr) return '';
             const date = new Date(dateStr);
             return date.toLocaleDateString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
