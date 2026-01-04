@@ -123,7 +123,7 @@ class QuizGenerateResponse(BaseResponse):
 class QuizAnswer(BaseModel):
     """Individual quiz answer."""
     question_id: int
-    user_answer: str
+    user_answer: Any  # Can be int (multiple choice index) or str (fill blank)
 
 
 class QuizSubmitRequest(BaseModel):
@@ -137,8 +137,8 @@ class QuizFeedback(BaseModel):
     """Feedback for individual question."""
     question_id: int
     is_correct: bool
-    user_answer: str
-    correct_answer: str
+    user_answer: Any  # Can be int or str
+    correct_answer: Any  # Can be int or str
     explanation: Optional[str] = None
 
 
