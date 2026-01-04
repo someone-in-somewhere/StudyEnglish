@@ -553,9 +553,7 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
 
     // Quiz Page Component
     Alpine.data('quizPage', () => ({
-        topics: [],
         quizType: 'multiple_choice',
-        quizTopic: '',
         numQuestions: 10,
         loading: false,
         quizActive: false,
@@ -573,29 +571,18 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
         quizFeedback: [],
 
         async init() {
-            await this.loadTopics();
-        },
-
-        async loadTopics() {
-            try {
-                const response = await fetchAPI('/topics/list');
-                if (response.success) {
-                    this.topics = response.topics;
-                }
-            } catch (error) {
-                console.error('Failed to load topics:', error);
-            }
+            // Quiz uses learned vocabulary only, no topics needed
         },
 
         async startQuiz() {
             this.loading = true;
 
             try {
+                // Generate quiz from all learned vocabulary (use_learned_only is default true in backend)
                 const response = await fetchAPI('/quiz/generate', {
                     method: 'POST',
                     body: JSON.stringify({
                         quiz_type: this.quizType,
-                        topic: this.quizTopic || null,
                         num_questions: parseInt(this.numQuestions)
                     })
                 });
@@ -608,11 +595,11 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
                     this.answers = [];
                     this.startTimer();
                 } else {
-                    alert(response.message || 'Failed to generate quiz');
+                    alert(response.message || 'Không thể tạo quiz. Hãy học thêm từ mới trước!');
                 }
             } catch (error) {
                 console.error('Failed to start quiz:', error);
-                alert('Failed to start quiz. Make sure you have learned some vocabulary first.');
+                alert('Không thể tạo quiz. Hãy vào mục Vocabulary và nhấn "Learn" để thêm từ vào danh sách học trước.');
             } finally {
                 this.loading = false;
             }
