@@ -65,15 +65,6 @@ document.addEventListener('alpine:init', () => {
                 ]
             },
             {
-                title: 'Practice',
-                items: [
-                    { id: 'chat', name: 'AI Chat', icon: 'fas fa-comments' },
-                    { id: 'exercises', name: 'Exercises', icon: 'fas fa-dumbbell' },
-                    { id: 'reading', name: 'Reading', icon: 'fas fa-book-reader' },
-                    { id: 'writing', name: 'Writing', icon: 'fas fa-pen' },
-                ]
-            },
-            {
                 title: 'Tools',
                 items: [
                     { id: 'translation', name: 'Translation', icon: 'fas fa-language' },
