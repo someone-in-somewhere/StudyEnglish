@@ -749,6 +749,11 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
         practiceDirection: '',
         sentenceComplexity: '',
         practicePrompt: '',
+        // Conversation Practice
+        chatTopic: '',
+        chatLevel: '',
+        chatStyle: '',
+        chatPrompt: '',
 
         async init() {
             // No initialization needed
@@ -897,6 +902,88 @@ Your translation:`;
 
         copyPracticePrompt() {
             navigator.clipboard.writeText(this.practicePrompt);
+            Alpine.store('app')?.showToast?.('Prompt copied to clipboard!', 'success');
+        },
+
+        generateChatPrompt() {
+            const levelDescMap = {
+                'A1': 'very simple vocabulary and basic grammar, short sentences, common everyday words',
+                'A2': 'elementary vocabulary and simple grammar, can discuss familiar topics',
+                'B1': 'intermediate vocabulary, can discuss opinions and experiences, uses common idioms',
+                'B2': 'upper-intermediate vocabulary, can discuss abstract topics, uses varied sentence structures',
+                'C1': 'advanced vocabulary including idioms and nuanced expressions, can discuss complex topics fluently'
+            };
+
+            const styleDescMap = {
+                'casual': 'a friendly, casual conversation between friends or acquaintances',
+                'formal': 'a formal, professional conversation in a business or official setting',
+                'roleplay': 'a role-play scenario where you act as a specific character in a situation',
+                'debate': 'a discussion/debate where you present arguments and counterarguments on the topic',
+                'interview': 'an interview format where you ask and answer questions about the topic'
+            };
+
+            const roleplayScenarios = {
+                'Personal and Communication': 'meeting a new neighbor or reconnecting with an old friend',
+                'Work and Business': 'a job interview or a meeting with a business partner',
+                'Meetings and Presentations': 'presenting a project update to your team',
+                'Transportation and Travel': 'asking for directions or booking a hotel',
+                'Shopping and Money': 'negotiating a price or returning a product',
+                'Food and Drink': 'ordering at a restaurant or discussing recipes',
+                'Health and Medicine': 'visiting a doctor or discussing healthy habits',
+                'School and Education': 'talking to a teacher or discussing study plans'
+            };
+
+            const levelDesc = levelDescMap[this.chatLevel];
+            const styleDesc = styleDescMap[this.chatStyle];
+
+            let roleplayContext = '';
+            if (this.chatStyle === 'roleplay') {
+                const scenario = roleplayScenarios[this.chatTopic] || 'a realistic situation related to ' + this.chatTopic;
+                roleplayContext = `\n\nROLE-PLAY SCENARIO: Create a specific scenario about "${scenario}". Assign me a role and describe the setting before we begin.`;
+            }
+
+            this.chatPrompt = `You are an English conversation partner helping me practice speaking English at ${this.chatLevel} level.
+
+CONVERSATION SETTINGS:
+- Topic: ${this.chatTopic}
+- My Level: ${this.chatLevel} (${levelDesc})
+- Style: ${this.chatStyle} - ${styleDesc}${roleplayContext}
+
+YOUR ROLE AS CONVERSATION PARTNER:
+1. Engage in natural, flowing conversation about the topic
+2. Match your language complexity to my ${this.chatLevel} level
+3. Keep your responses conversational (2-4 sentences typically, unless explaining something)
+4. Ask follow-up questions to keep the conversation going
+5. Introduce relevant vocabulary naturally in context
+
+LANGUAGE CORRECTION:
+After each of my responses:
+- If I make grammar or vocabulary errors, briefly note them at the end of your reply
+- Format: 📝 Correction: "[my error]" → "[correct form]" (brief explanation)
+- If my English is correct, don't mention corrections - just continue the conversation
+- Don't interrupt the flow with too many corrections; focus on significant errors
+
+VOCABULARY BUILDING:
+- When using a word or phrase that might be new to me, briefly explain it
+- Format: 💡 "word/phrase" = meaning or explanation
+- Suggest alternative expressions I could use to sound more natural
+
+CONVERSATION FLOW:
+- Start by greeting me and introducing the topic with an engaging question
+- Guide the conversation to cover different aspects of the topic
+- After about 10-15 exchanges, naturally conclude and provide a summary
+
+END OF SESSION (after ~15 exchanges):
+Provide a "📚 Session Summary" with:
+1. Key vocabulary and phrases we used (with Vietnamese translations)
+2. Grammar points I should review
+3. Suggestions for improving my conversational English
+
+START the conversation now! Greet me and ask an opening question about "${this.chatTopic}".`;
+        },
+
+        copyChatPrompt() {
+            navigator.clipboard.writeText(this.chatPrompt);
             Alpine.store('app')?.showToast?.('Prompt copied to clipboard!', 'success');
         }
     }));
