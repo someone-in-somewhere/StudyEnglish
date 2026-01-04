@@ -719,14 +719,90 @@
                             </div>
                             <textarea readonly
                                       x-model="practicePrompt"
-                                      class="w-full h-80 p-4 border rounded-lg bg-gray-50 text-sm font-mono resize-none"></textarea>
+                                      class="w-full h-64 p-4 border rounded-lg bg-gray-50 text-sm font-mono resize-none"></textarea>
                             <p class="text-sm text-gray-500 mt-2">
                                 <i class="fas fa-arrow-right mr-1"></i>Copy prompt này và paste vào ChatGPT, Claude hoặc AI khác để bắt đầu luyện dịch
                             </p>
+
+                            <!-- Save Score Section -->
+                            <div class="mt-4 pt-4 border-t">
+                                <h4 class="text-sm font-semibold mb-3">Sau khi học xong, nhập điểm để lưu lịch sử:</h4>
+                                <div class="flex items-center gap-4">
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-sm text-gray-600">Điểm (0-10):</label>
+                                        <input type="number" x-model="practiceScore" min="0" max="10" step="0.1"
+                                               class="w-20 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+                                               placeholder="8.5">
+                                    </div>
+                                    <button @click="saveTranslationHistory"
+                                            :disabled="!practiceScore"
+                                            class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
+                                        <i class="fas fa-plus mr-1"></i>Thêm vào lịch sử
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
+                        <!-- Translation History Table -->
+                        <div class="mt-6 bg-white rounded-xl shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">
+                                <i class="fas fa-history mr-2 text-gray-600"></i>
+                                Lịch sử luyện dịch
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-50">
+                                            <th class="px-4 py-3 text-left font-medium text-gray-600">Ngày</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-600">Chủ đề</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-600">Độ khó</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-600">Hướng dịch</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-600">Độ dài</th>
+                                            <th class="px-4 py-3 text-center font-medium text-gray-600">Điểm</th>
+                                            <th class="px-4 py-3 text-center font-medium text-gray-600">Xóa</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template x-for="(item, index) in translationHistory" :key="index">
+                                            <tr class="border-t hover:bg-gray-50">
+                                                <td class="px-4 py-3" x-text="formatDate(item.date)"></td>
+                                                <td class="px-4 py-3" x-text="item.topic"></td>
+                                                <td class="px-4 py-3">
+                                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs" x-text="item.level"></span>
+                                                </td>
+                                                <td class="px-4 py-3" x-text="item.direction === 'vi_to_en' ? 'VI → EN' : 'EN → VI'"></td>
+                                                <td class="px-4 py-3" x-text="item.length"></td>
+                                                <td class="px-4 py-3 text-center">
+                                                    <span class="px-2 py-1 rounded font-medium"
+                                                          :class="item.score >= 8 ? 'bg-green-100 text-green-700' : item.score >= 6 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'"
+                                                          x-text="item.score"></span>
+                                                </td>
+                                                <td class="px-4 py-3 text-center">
+                                                    <button @click="deleteTranslationHistory(index)" class="text-red-500 hover:text-red-700">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                        <tr x-show="translationHistory.length === 0">
+                                            <td colspan="7" class="px-4 py-8 text-center text-gray-400">
+                                                Chưa có lịch sử luyện dịch
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Conversation Page -->
+            <div x-show="currentPage === 'conversation'" x-cloak class="slide-enter">
+                <template x-if="currentPage === 'conversation'">
+                    <div x-data="conversationPage" x-init="init()">
                         <!-- Conversation Practice Section -->
-                        <div class="mt-8 bg-white rounded-xl shadow p-6">
+                        <div class="bg-white rounded-xl shadow p-6">
                             <h3 class="text-lg font-semibold mb-4">
                                 <i class="fas fa-comments mr-2 text-primary"></i>
                                 Conversation Practice (Luyện hội thoại)
@@ -735,7 +811,8 @@
                                 Tạo prompt để luyện hội thoại tiếng Anh với AI theo chủ đề
                             </p>
 
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <!-- Practice Options Row 1 -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Topic (Chủ đề) <span class="text-red-500">*</span></label>
                                     <select x-model="chatTopic" class="w-full border rounded-lg px-3 py-2">
@@ -777,7 +854,7 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Conversation Style (Phong cách) <span class="text-red-500">*</span></label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Style (Phong cách) <span class="text-red-500">*</span></label>
                                     <select x-model="chatStyle" class="w-full border rounded-lg px-3 py-2">
                                         <option value="">-- Chọn phong cách --</option>
                                         <option value="casual">Casual (Thân mật, bạn bè)</option>
@@ -787,10 +864,19 @@
                                         <option value="interview">Interview (Phỏng vấn)</option>
                                     </select>
                                 </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Length (Độ dài) <span class="text-red-500">*</span></label>
+                                    <select x-model="chatLength" class="w-full border rounded-lg px-3 py-2">
+                                        <option value="">-- Chọn độ dài --</option>
+                                        <option value="short">Short - 5-8 exchanges (Ngắn)</option>
+                                        <option value="medium">Medium - 10-15 exchanges (Trung bình)</option>
+                                        <option value="long">Long - 18-25 exchanges (Dài)</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <button @click="generateChatPrompt"
-                                    :disabled="!chatTopic || !chatLevel || !chatStyle"
+                                    :disabled="!chatTopic || !chatLevel || !chatStyle || !chatLength"
                                     class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
                                 <i class="fas fa-magic mr-2"></i>Generate Prompt
                             </button>
@@ -809,10 +895,79 @@
                             </div>
                             <textarea readonly
                                       x-model="chatPrompt"
-                                      class="w-full h-80 p-4 border rounded-lg bg-gray-50 text-sm font-mono resize-none"></textarea>
+                                      class="w-full h-64 p-4 border rounded-lg bg-gray-50 text-sm font-mono resize-none"></textarea>
                             <p class="text-sm text-gray-500 mt-2">
                                 <i class="fas fa-arrow-right mr-1"></i>Copy prompt này và paste vào ChatGPT, Claude hoặc AI khác để bắt đầu luyện hội thoại
                             </p>
+
+                            <!-- Save Score Section -->
+                            <div class="mt-4 pt-4 border-t">
+                                <h4 class="text-sm font-semibold mb-3">Sau khi học xong, nhập điểm để lưu lịch sử:</h4>
+                                <div class="flex items-center gap-4">
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-sm text-gray-600">Điểm (0-10):</label>
+                                        <input type="number" x-model="chatScore" min="0" max="10" step="0.1"
+                                               class="w-20 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                                               placeholder="8.5">
+                                    </div>
+                                    <button @click="saveConversationHistory"
+                                            :disabled="!chatScore"
+                                            class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
+                                        <i class="fas fa-plus mr-1"></i>Thêm vào lịch sử
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Conversation History Table -->
+                        <div class="mt-6 bg-white rounded-xl shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">
+                                <i class="fas fa-history mr-2 text-gray-600"></i>
+                                Lịch sử luyện hội thoại
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-50">
+                                            <th class="px-4 py-3 text-left font-medium text-gray-600">Ngày</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-600">Chủ đề</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-600">Độ khó</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-600">Phong cách</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-600">Độ dài</th>
+                                            <th class="px-4 py-3 text-center font-medium text-gray-600">Điểm</th>
+                                            <th class="px-4 py-3 text-center font-medium text-gray-600">Xóa</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template x-for="(item, index) in conversationHistory" :key="index">
+                                            <tr class="border-t hover:bg-gray-50">
+                                                <td class="px-4 py-3" x-text="formatDate(item.date)"></td>
+                                                <td class="px-4 py-3" x-text="item.topic"></td>
+                                                <td class="px-4 py-3">
+                                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs" x-text="item.level"></span>
+                                                </td>
+                                                <td class="px-4 py-3" x-text="item.style"></td>
+                                                <td class="px-4 py-3" x-text="item.length"></td>
+                                                <td class="px-4 py-3 text-center">
+                                                    <span class="px-2 py-1 rounded font-medium"
+                                                          :class="item.score >= 8 ? 'bg-green-100 text-green-700' : item.score >= 6 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'"
+                                                          x-text="item.score"></span>
+                                                </td>
+                                                <td class="px-4 py-3 text-center">
+                                                    <button @click="deleteConversationHistory(index)" class="text-red-500 hover:text-red-700">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                        <tr x-show="conversationHistory.length === 0">
+                                            <td colspan="7" class="px-4 py-8 text-center text-gray-400">
+                                                Chưa có lịch sử luyện hội thoại
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </template>

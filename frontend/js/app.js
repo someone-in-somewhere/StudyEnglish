@@ -67,7 +67,8 @@ document.addEventListener('alpine:init', () => {
             {
                 title: 'Tools',
                 items: [
-                    { id: 'translation', name: 'Translation', icon: 'fas fa-language' },
+                    { id: 'translation', name: 'Translation Practice', icon: 'fas fa-language' },
+                    { id: 'conversation', name: 'Conversation Practice', icon: 'fas fa-comments' },
                     { id: 'flashcards', name: 'Flashcards', icon: 'fas fa-clone' },
                 ]
             }
@@ -121,15 +122,10 @@ document.addEventListener('alpine:init', () => {
                 'dashboard': { title: 'Dashboard', desc: 'Overview of your learning progress' },
                 'vocabulary': { title: 'Vocabulary', desc: 'Learn new words with AI' },
                 'quiz': { title: 'Quiz Vocabulary', desc: 'Test your vocabulary knowledge' },
-                'translation': { title: 'Translation', desc: 'English ↔ Vietnamese translation' },
+                'translation': { title: 'Translation Practice', desc: 'Practice translation with AI' },
+                'conversation': { title: 'Conversation Practice', desc: 'Practice English conversation with AI' },
                 'srs': { title: 'Spaced Repetition', desc: 'Review words for long-term memory' },
-                'chat': { title: 'AI Chat', desc: 'Practice conversation with AI tutor' },
-                'exercises': { title: 'Exercises', desc: 'Grammar and vocabulary exercises' },
-                'reading': { title: 'Reading', desc: 'Reading comprehension practice' },
-                'writing': { title: 'Writing', desc: 'Writing practice with feedback' },
                 'flashcards': { title: 'Flashcards', desc: 'Study with flashcards' },
-                'errors': { title: 'Error Analysis', desc: 'Track and improve your weaknesses' },
-                'learning-paths': { title: 'Learning Paths', desc: 'Structured learning curriculum' },
             };
 
             const pageInfo = pageTitles[page] || { title: 'StudyEnglish', desc: '' };
@@ -749,74 +745,55 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
         practiceDirection: '',
         sentenceComplexity: '',
         practicePrompt: '',
-        // Conversation Practice
-        chatTopic: '',
-        chatLevel: '',
-        chatStyle: '',
-        chatPrompt: '',
+        practiceScore: '',
+        translationHistory: [],
 
         async init() {
-            // No initialization needed
+            this.loadTranslationHistory();
         },
 
-        async loadHistory() {
-            try {
-                const response = await fetchAPI('/translation/history?limit=10');
-                if (response.success) {
-                    this.history = response.translations;
-                }
-            } catch (error) {
-                console.error('Failed to load history:', error);
+        loadTranslationHistory() {
+            const saved = localStorage.getItem('translationHistory');
+            if (saved) {
+                this.translationHistory = JSON.parse(saved);
             }
         },
 
-        swapLanguages() {
-            const temp = this.sourceLang;
-            this.sourceLang = this.targetLang;
-            this.targetLang = temp;
+        saveTranslationHistory() {
+            if (!this.practiceScore) return;
 
-            const tempText = this.sourceText;
-            this.sourceText = this.translatedText;
-            this.translatedText = tempText;
+            const historyItem = {
+                date: new Date().toISOString(),
+                topic: this.practiceTopic,
+                level: this.practiceLevel,
+                direction: this.practiceDirection,
+                length: this.practiceLength,
+                complexity: this.sentenceComplexity,
+                score: parseFloat(this.practiceScore)
+            };
+
+            this.translationHistory.unshift(historyItem);
+            localStorage.setItem('translationHistory', JSON.stringify(this.translationHistory));
+            this.practiceScore = '';
+            Alpine.store('app')?.showToast?.('Đã lưu vào lịch sử!', 'success');
         },
 
-        async translate() {
-            if (!this.sourceText.trim()) return;
-
-            this.loading = true;
-
-            try {
-                const response = await fetchAPI('/translation/translate', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        text: this.sourceText,
-                        source_lang: this.sourceLang,
-                        target_lang: this.targetLang,
-                        level: this.adjustLevel || null
-                    })
-                });
-
-                if (response.success) {
-                    this.translatedText = response.translated_text;
-                    await this.loadHistory();
-                }
-            } catch (error) {
-                console.error('Translation failed:', error);
-            } finally {
-                this.loading = false;
-            }
+        deleteTranslationHistory(index) {
+            this.translationHistory.splice(index, 1);
+            localStorage.setItem('translationHistory', JSON.stringify(this.translationHistory));
+            Alpine.store('app')?.showToast?.('Đã xóa!', 'success');
         },
 
-        copyTranslation() {
-            navigator.clipboard.writeText(this.translatedText);
-            Alpine.store('app')?.showToast?.('Copied to clipboard!', 'success');
-        },
-
-        loadTranslation(item) {
-            this.sourceText = item.source_text;
-            this.translatedText = item.translated_text;
-            this.sourceLang = item.source_lang;
-            this.targetLang = item.target_lang;
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         },
 
         generatePracticePrompt() {
@@ -867,29 +844,32 @@ TASK: Create a translation practice exercise following these requirements:
    - Sentences should flow naturally and logically from one to another
    - Include transitional words/phrases to connect ideas
 
-2. PRACTICE FORMAT:
+2. SCORING CRITERIA (for each sentence, score 0-10 with decimals allowed):
+   - Accuracy (4 points): Meaning preserved, no mistranslation
+   - Grammar (3 points): Correct tense, word order, sentence structure
+   - Vocabulary (2 points): Appropriate word choice, natural expressions
+   - Fluency (1 point): Natural flow, no awkward phrasing
+
+3. PRACTICE FORMAT:
    After generating the passage, present it sentence by sentence for me to translate.
 
    For each sentence:
    - Show the original sentence in ${sourceLang}
    - Wait for my translation to ${targetLang}
    - After I respond:
-     • Grade my translation (score out of 10)
-     • Point out any errors (grammar, vocabulary, word order, tense, etc.)
-     • Explain corrections in detail
-     • Provide a model translation for comparison
+     • 📊 Score: X.X/10 (breakdown: Accuracy X/4, Grammar X/3, Vocabulary X/2, Fluency X/1)
+     • ❌ Errors: List specific errors with corrections
+     • 💡 Suggestions: Tips for improvement
+     • ✅ Model translation: Provide ideal translation
    - Then move to the next sentence
 
-3. FINAL REVIEW:
+4. FINAL REVIEW:
    After I complete all sentences:
-   - Give an overall score and detailed feedback
-   - List common mistakes I made and how to avoid them
-   - Comment on my tense usage and consistency
-   - Provide a "📚 Vocabulary to Remember" section with:
-     • 10-15 important words/phrases from the passage
-     • Their meanings in both ${sourceLang} and ${targetLang}
-     • Part of speech (noun, verb, adj, etc.)
-     • Example sentences showing correct usage
+   - 📊 OVERALL SCORE: X.X/10 (can be decimal like 7.5, 8.3, etc.)
+   - 📈 Score breakdown by category
+   - ❌ Common mistakes I made and how to avoid them
+   - ✅ What I did well
+   - 📚 Vocabulary to Remember: 10-15 important words/phrases with meanings and examples
 
 START by generating the ${sourceLang} passage about "${this.practiceTopic}" (${length}, ${complexityDesc}) and present the FIRST sentence for me to translate.
 
@@ -903,6 +883,78 @@ Your translation:`;
         copyPracticePrompt() {
             navigator.clipboard.writeText(this.practicePrompt);
             Alpine.store('app')?.showToast?.('Prompt copied to clipboard!', 'success');
+        }
+    }));
+
+    // Conversation Page Component
+    Alpine.data('conversationPage', () => ({
+        chatTopic: '',
+        chatLevel: '',
+        chatStyle: '',
+        chatLength: '',
+        chatPrompt: '',
+        chatScore: '',
+        conversationHistory: [],
+
+        async init() {
+            this.loadConversationHistory();
+        },
+
+        loadConversationHistory() {
+            const saved = localStorage.getItem('conversationHistory');
+            if (saved) {
+                this.conversationHistory = JSON.parse(saved);
+            }
+        },
+
+        saveConversationHistory() {
+            if (!this.chatScore) return;
+
+            const styleNames = {
+                'casual': 'Casual',
+                'formal': 'Formal',
+                'roleplay': 'Role-play',
+                'debate': 'Debate',
+                'interview': 'Interview'
+            };
+
+            const lengthNames = {
+                'short': 'Short',
+                'medium': 'Medium',
+                'long': 'Long'
+            };
+
+            const historyItem = {
+                date: new Date().toISOString(),
+                topic: this.chatTopic,
+                level: this.chatLevel,
+                style: styleNames[this.chatStyle] || this.chatStyle,
+                length: lengthNames[this.chatLength] || this.chatLength,
+                score: parseFloat(this.chatScore)
+            };
+
+            this.conversationHistory.unshift(historyItem);
+            localStorage.setItem('conversationHistory', JSON.stringify(this.conversationHistory));
+            this.chatScore = '';
+            Alpine.store('app')?.showToast?.('Đã lưu vào lịch sử!', 'success');
+        },
+
+        deleteConversationHistory(index) {
+            this.conversationHistory.splice(index, 1);
+            localStorage.setItem('conversationHistory', JSON.stringify(this.conversationHistory));
+            Alpine.store('app')?.showToast?.('Đã xóa!', 'success');
+        },
+
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         },
 
         generateChatPrompt() {
@@ -922,6 +974,12 @@ Your translation:`;
                 'interview': 'an interview format where you ask and answer questions about the topic'
             };
 
+            const lengthMap = {
+                'short': { exchanges: '5-8', desc: 'short' },
+                'medium': { exchanges: '10-15', desc: 'medium' },
+                'long': { exchanges: '18-25', desc: 'extended' }
+            };
+
             const roleplayScenarios = {
                 'Personal and Communication': 'meeting a new neighbor or reconnecting with an old friend',
                 'Work and Business': 'a job interview or a meeting with a business partner',
@@ -935,6 +993,7 @@ Your translation:`;
 
             const levelDesc = levelDescMap[this.chatLevel];
             const styleDesc = styleDescMap[this.chatStyle];
+            const lengthInfo = lengthMap[this.chatLength];
 
             let roleplayContext = '';
             if (this.chatStyle === 'roleplay') {
@@ -947,39 +1006,45 @@ Your translation:`;
 CONVERSATION SETTINGS:
 - Topic: ${this.chatTopic}
 - My Level: ${this.chatLevel} (${levelDesc})
-- Style: ${this.chatStyle} - ${styleDesc}${roleplayContext}
+- Style: ${this.chatStyle} - ${styleDesc}
+- Length: ${lengthInfo.exchanges} exchanges (${lengthInfo.desc} conversation)${roleplayContext}
+
+SCORING CRITERIA (for each of my responses, score 0-10 with decimals allowed):
+- Communication (3 points): Clear message, appropriate response to context
+- Grammar (3 points): Correct tense, sentence structure, word order
+- Vocabulary (2 points): Appropriate word choice, variety of expressions
+- Fluency (2 points): Natural flow, no awkward phrasing
 
 YOUR ROLE AS CONVERSATION PARTNER:
 1. Engage in natural, flowing conversation about the topic
 2. Match your language complexity to my ${this.chatLevel} level
-3. Keep your responses conversational (2-4 sentences typically, unless explaining something)
+3. Keep your responses conversational (2-4 sentences typically)
 4. Ask follow-up questions to keep the conversation going
-5. Introduce relevant vocabulary naturally in context
 
-LANGUAGE CORRECTION:
-After each of my responses:
-- If I make grammar or vocabulary errors, briefly note them at the end of your reply
-- Format: 📝 Correction: "[my error]" → "[correct form]" (brief explanation)
-- If my English is correct, don't mention corrections - just continue the conversation
-- Don't interrupt the flow with too many corrections; focus on significant errors
-
-VOCABULARY BUILDING:
-- When using a word or phrase that might be new to me, briefly explain it
-- Format: 💡 "word/phrase" = meaning or explanation
-- Suggest alternative expressions I could use to sound more natural
+AFTER EACH OF MY RESPONSES:
+1. Continue the conversation naturally
+2. Then provide feedback:
+   📊 Score: X.X/10 (Communication X/3, Grammar X/3, Vocabulary X/2, Fluency X/2)
+   📝 Corrections (if any): "[error]" → "[correct]"
+   💡 Better expression: Suggest more natural ways to say what I meant
+3. If my English is perfect, just show the score without corrections
 
 CONVERSATION FLOW:
-- Start by greeting me and introducing the topic with an engaging question
-- Guide the conversation to cover different aspects of the topic
-- After about 10-15 exchanges, naturally conclude and provide a summary
+- Track exchange count (e.g., "Exchange 3/${lengthInfo.exchanges.split('-')[1]}")
+- After ${lengthInfo.exchanges} exchanges, naturally conclude the conversation
 
-END OF SESSION (after ~15 exchanges):
-Provide a "📚 Session Summary" with:
-1. Key vocabulary and phrases we used (with Vietnamese translations)
-2. Grammar points I should review
-3. Suggestions for improving my conversational English
+END OF SESSION:
+Provide "📊 FINAL ASSESSMENT":
+- Overall Score: X.X/10 (can be decimal like 7.5, 8.3)
+- Score breakdown by category (average)
+- ✅ Strengths: What I did well
+- ❌ Areas to improve: Common mistakes with corrections
+- 📚 Key Vocabulary: 10-15 useful words/phrases from our conversation (with Vietnamese translations)
+- 💡 Tips: Specific suggestions for improvement
 
-START the conversation now! Greet me and ask an opening question about "${this.chatTopic}".`;
+START the conversation now! Greet me and ask an opening question about "${this.chatTopic}".
+
+[Exchange 1/${lengthInfo.exchanges.split('-')[1]}]`;
         },
 
         copyChatPrompt() {
