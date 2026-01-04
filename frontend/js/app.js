@@ -94,10 +94,21 @@ document.addEventListener('alpine:init', () => {
 
         async loadStats() {
             try {
-                const response = await fetchAPI('/progress/stats');
-                if (response.success) {
-                    this.stats.streak = response.stats.current_streak || 0;
-                    this.stats.wordsLearned = response.stats.total_words || 0;
+                // Fetch progress stats and streak in parallel
+                const [progressResp, streakResp] = await Promise.all([
+                    fetchAPI('/progress/stats'),
+                    fetchAPI('/analytics/streak')
+                ]);
+
+                if (progressResp.success) {
+                    this.stats.wordsLearned = progressResp.stats.total_words || 0;
+                    // Use streak from progress as fallback
+                    this.stats.streak = progressResp.stats.current_streak || 0;
+                }
+
+                // Override with more accurate streak from analytics
+                if (streakResp.success) {
+                    this.stats.streak = streakResp.current_streak || 0;
                 }
             } catch (error) {
                 console.error('Failed to load stats:', error);
