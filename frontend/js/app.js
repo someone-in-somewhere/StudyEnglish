@@ -516,7 +516,16 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
                 });
 
                 if (response.success) {
-                    Alpine.store('app')?.showToast?.('Word marked as learned!', 'success');
+                    // Update local vocabulary state to show it's learned
+                    const wordIndex = this.vocabulary.findIndex(v => v.id === vocabId);
+                    if (wordIndex !== -1) {
+                        this.vocabulary[wordIndex].user_progress = {
+                            learned_at: new Date().toISOString(),
+                            review_count: 0,
+                            mastery_level: 1
+                        };
+                    }
+                    Alpine.store('app')?.showToast?.('Đã thêm vào danh sách học!', 'success');
                 }
             } catch (error) {
                 console.error('Failed to mark as learned:', error);

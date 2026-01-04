@@ -426,11 +426,12 @@
                                         <div class="flex flex-col space-y-2 ml-4">
                                             <button x-show="!word.user_progress" @click="markAsLearned(word.id)"
                                                     class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-green-600 transition-colors">
-                                                <i class="fas fa-check mr-1"></i> Learn
+                                                <i class="fas fa-plus mr-1"></i> Learn
                                             </button>
                                             <button x-show="word.user_progress" @click="removeFromLearned(word.id)"
-                                                    class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
-                                                <i class="fas fa-trash mr-1"></i> Remove
+                                                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-red-500 transition-colors group">
+                                                <span class="group-hover:hidden"><i class="fas fa-check mr-1"></i> Learned</span>
+                                                <span class="hidden group-hover:inline"><i class="fas fa-trash mr-1"></i> Remove</span>
                                             </button>
                                             <button @click="toggleFavorite(word.id)"
                                                     class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors"
