@@ -1084,6 +1084,8 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
                     this.translationHistory.unshift(response.practice);
                     this.practiceScore = '';
                     Alpine.store('app')?.showToast?.('Đã lưu vào lịch sử!', 'success');
+                    // Auto refresh topic stats
+                    await this.loadTopicStats();
                 }
             } catch (error) {
                 console.error('Failed to save translation history:', error);
@@ -1307,6 +1309,8 @@ Your translation:`;
                     this.conversationHistory.unshift(response.practice);
                     this.chatScore = '';
                     Alpine.store('app')?.showToast?.('Đã lưu vào lịch sử!', 'success');
+                    // Auto refresh topic stats
+                    await this.loadTopicStats();
                 }
             } catch (error) {
                 console.error('Failed to save conversation history:', error);
