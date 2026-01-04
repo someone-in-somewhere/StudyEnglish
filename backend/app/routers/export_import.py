@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.database import get_sync_session
 from app.models.db_models import Vocabulary, UserVocabulary
 
 router = APIRouter(prefix="/api/export", tags=["export"])
@@ -24,7 +24,7 @@ def export_vocabulary_json(
     learned_only: bool = True,
     topic: Optional[str] = None,
     level: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_session)
 ):
     """Export vocabulary to JSON format."""
     query = db.query(Vocabulary)
@@ -82,7 +82,7 @@ def export_vocabulary_csv(
     learned_only: bool = True,
     topic: Optional[str] = None,
     level: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_session)
 ):
     """Export vocabulary to CSV format."""
     query = db.query(Vocabulary)
@@ -148,7 +148,7 @@ def export_vocabulary_anki(
     learned_only: bool = True,
     topic: Optional[str] = None,
     level: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_session)
 ):
     """Export vocabulary to Anki-compatible text format (tab-separated)."""
     query = db.query(Vocabulary)
@@ -204,7 +204,7 @@ def export_vocabulary_anki(
 
 
 @router.get("/stats")
-def get_export_stats(db: Session = Depends(get_db)):
+def get_export_stats(db: Session = Depends(get_sync_session)):
     """Get statistics about exportable data."""
     total_vocab = db.query(Vocabulary).count()
     learned_vocab = db.query(UserVocabulary).count()
@@ -237,7 +237,7 @@ import_router = APIRouter(prefix="/api/import", tags=["import"])
 @import_router.post("/vocabulary/json")
 async def import_vocabulary_json(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_session)
 ):
     """Import vocabulary from JSON file."""
     if not file.filename.endswith('.json'):
@@ -309,7 +309,7 @@ async def import_vocabulary_json(
 @import_router.post("/vocabulary/csv")
 async def import_vocabulary_csv(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_session)
 ):
     """Import vocabulary from CSV file."""
     if not file.filename.endswith('.csv'):

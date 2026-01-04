@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from datetime import datetime, timedelta
 
-from app.database import get_db
+from app.database import get_sync_session
 from app.models.db_models import (
     ErrorPattern, QuizError, UserVocabulary, Vocabulary,
     TranslationPractice, ConversationPractice, Quiz
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/recommendations", tags=["recommendations"])
 
 
 @router.get("")
-def get_recommendations(db: Session = Depends(get_db)):
+def get_recommendations(db: Session = Depends(get_sync_session)):
     """Get personalized learning recommendations."""
     recommendations = []
 
@@ -194,7 +194,7 @@ def get_recommendations(db: Session = Depends(get_db)):
 
 
 @router.get("/weak-words")
-def get_weak_words(limit: int = 10, db: Session = Depends(get_db)):
+def get_weak_words(limit: int = 10, db: Session = Depends(get_sync_session)):
     """Get words that need more practice."""
     weak_words = db.query(UserVocabulary, Vocabulary)\
         .join(Vocabulary, UserVocabulary.vocabulary_id == Vocabulary.id)\
@@ -223,7 +223,7 @@ def get_weak_words(limit: int = 10, db: Session = Depends(get_db)):
 
 
 @router.get("/study-suggestions")
-def get_study_suggestions(db: Session = Depends(get_db)):
+def get_study_suggestions(db: Session = Depends(get_sync_session)):
     """Get suggestions for today's study session."""
     suggestions = []
 

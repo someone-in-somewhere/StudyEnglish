@@ -8,7 +8,7 @@ from sqlalchemy import func, desc
 from datetime import datetime, timedelta, date
 from collections import defaultdict
 
-from app.database import get_db
+from app.database import get_sync_session
 from app.models.db_models import (
     UserVocabulary, Quiz, StudySession,
     TranslationPractice, ConversationPractice
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 @router.get("/heatmap")
 def get_activity_heatmap(
     days: int = 365,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_session)
 ):
     """Get activity heatmap data (like GitHub contribution graph)."""
     end_date = date.today()
@@ -112,7 +112,7 @@ def get_activity_heatmap(
 
 
 @router.get("/weekly")
-def get_weekly_stats(db: Session = Depends(get_db)):
+def get_weekly_stats(db: Session = Depends(get_sync_session)):
     """Get weekly learning statistics."""
     today = date.today()
     weeks = []
@@ -168,7 +168,7 @@ def get_weekly_stats(db: Session = Depends(get_db)):
 
 
 @router.get("/monthly")
-def get_monthly_stats(db: Session = Depends(get_db)):
+def get_monthly_stats(db: Session = Depends(get_sync_session)):
     """Get monthly learning statistics."""
     today = date.today()
     months = []
@@ -213,7 +213,7 @@ def get_monthly_stats(db: Session = Depends(get_db)):
 
 
 @router.get("/streak")
-def get_streak_info(db: Session = Depends(get_db)):
+def get_streak_info(db: Session = Depends(get_sync_session)):
     """Get streak information."""
     today = date.today()
 
@@ -285,7 +285,7 @@ def get_streak_info(db: Session = Depends(get_db)):
 
 
 @router.get("/summary")
-def get_analytics_summary(db: Session = Depends(get_db)):
+def get_analytics_summary(db: Session = Depends(get_sync_session)):
     """Get overall analytics summary."""
     # Total stats
     total_words = db.query(UserVocabulary).count()

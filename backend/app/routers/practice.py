@@ -8,7 +8,7 @@ from sqlalchemy import func, desc
 from typing import Optional
 from datetime import datetime, timedelta
 
-from app.database import get_db
+from app.database import get_sync_session
 from app.models.db_models import TranslationPractice, ConversationPractice
 
 router = APIRouter(prefix="/api/practice", tags=["practice"])
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/api/practice", tags=["practice"])
 @router.get("/translation")
 def get_translation_history(
     limit: int = 50,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_session)
 ):
     """Get translation practice history."""
     history = db.query(TranslationPractice)\
@@ -37,7 +37,7 @@ def get_translation_history(
 @router.post("/translation")
 def save_translation_practice(
     data: dict,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_session)
 ):
     """Save a translation practice session."""
     practice = TranslationPractice(
@@ -63,7 +63,7 @@ def save_translation_practice(
 @router.delete("/translation/{practice_id}")
 def delete_translation_practice(
     practice_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_session)
 ):
     """Delete a translation practice record."""
     practice = db.query(TranslationPractice).filter(
@@ -108,7 +108,7 @@ def get_translation_stats(db: Session = Depends(get_db)):
 @router.get("/conversation")
 def get_conversation_history(
     limit: int = 50,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_session)
 ):
     """Get conversation practice history."""
     history = db.query(ConversationPractice)\
@@ -126,7 +126,7 @@ def get_conversation_history(
 @router.post("/conversation")
 def save_conversation_practice(
     data: dict,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_session)
 ):
     """Save a conversation practice session."""
     practice = ConversationPractice(
@@ -151,7 +151,7 @@ def save_conversation_practice(
 @router.delete("/conversation/{practice_id}")
 def delete_conversation_practice(
     practice_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_session)
 ):
     """Delete a conversation practice record."""
     practice = db.query(ConversationPractice).filter(
@@ -259,7 +259,7 @@ def get_all_practice_stats(db: Session = Depends(get_db)):
 @router.get("/recent")
 def get_recent_activity(
     limit: int = 10,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_session)
 ):
     """Get recent practice activity for dashboard."""
     trans = db.query(TranslationPractice)\
