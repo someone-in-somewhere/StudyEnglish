@@ -283,6 +283,38 @@ document.addEventListener('alpine:init', () => {
         saveResult: null,
         viewMode: 'saved', // 'saved' or 'learned'
 
+        // Vietnamese translations for topics
+        topicTranslations: {
+            'Personal and Communication': 'Giao tiếp cá nhân',
+            'Work and Business': 'Công việc và Kinh doanh',
+            'Meetings and Presentations': 'Họp và Thuyết trình',
+            'Email and Written Communication': 'Email và Giao tiếp văn bản',
+            'Small Talk and Social Skills': 'Trò chuyện xã giao',
+            'Science and Technology': 'Khoa học và Công nghệ',
+            'Transportation and Travel': 'Giao thông và Du lịch',
+            'Shopping and Money': 'Mua sắm và Tiền bạc',
+            'Everyday Life': 'Cuộc sống hàng ngày',
+            'Food and Drink': 'Đồ ăn và Thức uống',
+            'Entertainment and Leisure': 'Giải trí và Nghỉ ngơi',
+            'Health and Medicine': 'Sức khỏe và Y tế',
+            'School and Education': 'Trường học và Giáo dục',
+            'Public Services': 'Dịch vụ công cộng',
+            'Nature and Environment': 'Thiên nhiên và Môi trường',
+            'Sports and Fitness': 'Thể thao và Rèn luyện',
+            'Culture and Society': 'Văn hóa và Xã hội',
+            'Arts and Literature': 'Nghệ thuật và Văn học',
+            'History and Geography': 'Lịch sử và Địa lý',
+            'Government and Politics': 'Chính phủ và Chính trị',
+            'Law and Justice': 'Pháp luật và Công lý',
+            'Religion and Spirituality': 'Tôn giáo và Tâm linh',
+            'Philosophy and Ethics': 'Triết học và Đạo đức'
+        },
+
+        getTopicLabel(topicName) {
+            const viTrans = this.topicTranslations[topicName];
+            return viTrans ? `${topicName} (${viTrans})` : topicName;
+        },
+
         async init() {
             await this.loadTopics();
 

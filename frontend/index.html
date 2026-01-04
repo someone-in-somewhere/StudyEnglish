@@ -287,7 +287,7 @@
                                     <select x-model="selectedTopic" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
                                         <option value="">Select a topic...</option>
                                         <template x-for="topic in topics" :key="topic.id">
-                                            <option :value="topic.name" x-text="topic.name"></option>
+                                            <option :value="topic.name" x-text="getTopicLabel(topic.name)"></option>
                                         </template>
                                     </select>
                                 </div>
