@@ -388,6 +388,65 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
             }
         },
 
+        async loadSavedVocabulary() {
+            if (!this.selectedTopic) return;
+
+            this.loading = true;
+            this.generatedPrompt = '';
+            this.saveResult = null;
+
+            try {
+                const url = `/vocabulary/topic/${encodeURIComponent(this.selectedTopic)}?level=${this.selectedLevel}`;
+                const response = await fetchAPI(url);
+
+                if (response.success) {
+                    this.vocabulary = response.vocabulary || [];
+                    if (this.vocabulary.length > 0) {
+                        Alpine.store('app')?.showToast?.(`Loaded ${response.count} saved words`, 'success');
+                    } else {
+                        Alpine.store('app')?.showToast?.('No saved vocabulary for this topic/level', 'info');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load vocabulary:', error);
+                Alpine.store('app')?.showToast?.('Failed to load vocabulary', 'error');
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async loadLearnedVocabulary() {
+            this.loading = true;
+            this.generatedPrompt = '';
+            this.saveResult = null;
+
+            try {
+                let url = '/vocabulary/learned?limit=100';
+                if (this.selectedTopic) {
+                    url += `&topic=${encodeURIComponent(this.selectedTopic)}`;
+                }
+                if (this.selectedLevel) {
+                    url += `&level=${this.selectedLevel}`;
+                }
+
+                const response = await fetchAPI(url);
+
+                if (response.success) {
+                    this.vocabulary = response.vocabulary || [];
+                    if (this.vocabulary.length > 0) {
+                        Alpine.store('app')?.showToast?.(`Loaded ${response.count} learned words`, 'success');
+                    } else {
+                        Alpine.store('app')?.showToast?.('No learned vocabulary yet. Click "Learn" on words to add them.', 'info');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load learned vocabulary:', error);
+                Alpine.store('app')?.showToast?.('Failed to load learned vocabulary', 'error');
+            } finally {
+                this.loading = false;
+            }
+        },
+
         async markAsLearned(vocabId) {
             try {
                 const response = await fetchAPI('/vocabulary/mark-learned', {
