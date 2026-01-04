@@ -520,6 +520,49 @@ Generate {num_words} words for "{topic}" at {level} level:
 
         return vocabulary_list
 
+    def get_flashcard_words(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get flashcard words prioritizing weak words.
+
+        Prioritizes words with:
+        - Lower mastery level
+        - Fewer review counts
+        - Fewer quiz attempts (times_correct + times_incorrect)
+        """
+        query = (
+            self.db.query(UserVocabulary)
+            .join(Vocabulary)
+            .order_by(
+                UserVocabulary.mastery_level.asc(),
+                UserVocabulary.review_count.asc(),
+                (UserVocabulary.times_correct + UserVocabulary.times_incorrect).asc(),
+                func.random()
+            )
+            .limit(limit)
+        )
+
+        results = query.all()
+
+        flashcards = []
+        for uv in results:
+            flashcard = {
+                "id": uv.vocabulary.id,
+                "word": uv.vocabulary.word,
+                "meaning_vi": uv.vocabulary.meaning_vi,
+                "pronunciation": uv.vocabulary.pronunciation,
+                "part_of_speech": uv.vocabulary.part_of_speech,
+                "example_en": uv.vocabulary.example_en,
+                "example_vi": uv.vocabulary.example_vi,
+                "level": uv.vocabulary.level,
+                "topic": uv.vocabulary.topic,
+                "mastery_level": uv.mastery_level,
+                "review_count": uv.review_count,
+                "times_correct": uv.times_correct,
+                "times_incorrect": uv.times_incorrect
+            }
+            flashcards.append(flashcard)
+
+        return flashcards
+
     def get_vocabulary_stats(self) -> Dict[str, Any]:
         """Get vocabulary learning statistics."""
         # Total vocabulary

@@ -149,6 +149,19 @@ def get_learned_vocabulary(
     return {"success": True, "vocabulary": vocabulary, "count": len(vocabulary)}
 
 
+@router.get("/flashcards")
+def get_flashcards(
+    limit: int = 10,
+    db: Session = Depends(get_sync_session)
+):
+    """Get flashcard words prioritizing weak words (low mastery, few reviews, few quiz attempts)."""
+    service = VocabularyService(db)
+
+    flashcards = service.get_flashcard_words(limit=limit)
+
+    return {"success": True, "flashcards": flashcards, "count": len(flashcards)}
+
+
 @router.get("/stats")
 def get_vocabulary_stats(db: Session = Depends(get_sync_session)):
     """Get vocabulary learning statistics."""

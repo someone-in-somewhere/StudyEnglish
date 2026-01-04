@@ -69,8 +69,6 @@ document.addEventListener('alpine:init', () => {
                 items: [
                     { id: 'translation', name: 'Translation', icon: 'fas fa-language' },
                     { id: 'flashcards', name: 'Flashcards', icon: 'fas fa-clone' },
-                    { id: 'errors', name: 'Error Analysis', icon: 'fas fa-bug' },
-                    { id: 'learning-paths', name: 'Learning Paths', icon: 'fas fa-route' },
                 ]
             }
         ],
@@ -900,6 +898,97 @@ Your translation:`;
         copyPracticePrompt() {
             navigator.clipboard.writeText(this.practicePrompt);
             Alpine.store('app')?.showToast?.('Prompt copied to clipboard!', 'success');
+        }
+    }));
+
+    // Flashcards Page Component
+    Alpine.data('flashcardsPage', () => ({
+        numWords: 10,
+        loading: false,
+        totalLearned: 0,
+        flashcards: [],
+        studyActive: false,
+        studyComplete: false,
+        currentIndex: 0,
+        isFlipped: false,
+        knownCount: 0,
+
+        async init() {
+            await this.checkLearnedCount();
+        },
+
+        async checkLearnedCount() {
+            try {
+                const response = await fetchAPI('/vocabulary/learned?limit=1');
+                if (response.success) {
+                    this.totalLearned = response.count;
+                }
+            } catch (error) {
+                console.error('Failed to check learned count:', error);
+            }
+        },
+
+        get currentCard() {
+            return this.flashcards[this.currentIndex] || null;
+        },
+
+        async startStudy() {
+            this.loading = true;
+
+            try {
+                const response = await fetchAPI(`/vocabulary/flashcards?limit=${this.numWords}`);
+
+                if (response.success && response.flashcards.length > 0) {
+                    this.flashcards = response.flashcards;
+                    this.studyActive = true;
+                    this.studyComplete = false;
+                    this.currentIndex = 0;
+                    this.isFlipped = false;
+                    this.knownCount = 0;
+                } else {
+                    alert('Không có từ nào để học. Hãy vào Vocabulary và nhấn "Learn" để thêm từ!');
+                }
+            } catch (error) {
+                console.error('Failed to load flashcards:', error);
+                alert('Không thể tải flashcards. Vui lòng thử lại!');
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        flipCard() {
+            this.isFlipped = !this.isFlipped;
+        },
+
+        markCard(known) {
+            if (known) {
+                this.knownCount++;
+            }
+
+            // Move to next card
+            if (this.currentIndex < this.flashcards.length - 1) {
+                this.currentIndex++;
+                this.isFlipped = false;
+            } else {
+                this.studyComplete = true;
+            }
+        },
+
+        resetStudy() {
+            this.studyActive = false;
+            this.studyComplete = false;
+            this.flashcards = [];
+            this.currentIndex = 0;
+            this.isFlipped = false;
+            this.knownCount = 0;
+        },
+
+        speakWord(word) {
+            if (word && 'speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                speechSynthesis.speak(utterance);
+            }
         }
     }));
 

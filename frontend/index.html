@@ -881,13 +881,120 @@
                 </template>
             </div>
 
-            <!-- Placeholder for other pages -->
-            <div x-show="['exercises', 'reading', 'writing', 'flashcards', 'errors', 'learning-paths'].includes(currentPage)" x-cloak>
-                <div class="bg-white rounded-xl shadow p-12 text-center">
-                    <i class="fas fa-tools text-6xl text-gray-300 mb-4"></i>
-                    <h3 class="text-xl font-semibold text-gray-600 mb-2" x-text="pageTitle"></h3>
-                    <p class="text-gray-500">This feature is available. Navigate to explore!</p>
-                </div>
+            <!-- Flashcards Page -->
+            <div x-show="currentPage === 'flashcards'" x-cloak class="slide-enter">
+                <template x-if="currentPage === 'flashcards'">
+                    <div x-data="flashcardsPage" x-init="init()">
+                        <!-- Setup Section -->
+                        <div x-show="!studyActive" class="bg-white rounded-xl shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">
+                                <i class="fas fa-clone mr-2 text-primary"></i>
+                                Flashcards Study (Học Flashcard)
+                            </h3>
+                            <p class="text-sm text-gray-500 mb-4">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Ưu tiên từ có mastery thấp, ít lần review và ít lần làm quiz
+                            </p>
+
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Number of Words (Số từ muốn học)</label>
+                                <select x-model="numWords" class="w-full md:w-64 border rounded-lg px-4 py-2">
+                                    <option value="5">5 words</option>
+                                    <option value="10">10 words</option>
+                                    <option value="15">15 words</option>
+                                    <option value="20">20 words</option>
+                                    <option value="30">30 words</option>
+                                </select>
+                            </div>
+
+                            <button @click="startStudy"
+                                    :disabled="loading"
+                                    class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 transition-colors">
+                                <span x-show="!loading"><i class="fas fa-play mr-2"></i>Start Study</span>
+                                <span x-show="loading"><div class="loading-spinner inline-block"></div> Loading...</span>
+                            </button>
+
+                            <p x-show="totalLearned === 0" class="mt-4 text-amber-600">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                Chưa có từ nào trong Words Learned. Vào Vocabulary và nhấn "Learn" để thêm từ!
+                            </p>
+                        </div>
+
+                        <!-- Study Session -->
+                        <div x-show="studyActive && !studyComplete" class="max-w-2xl mx-auto">
+                            <!-- Progress -->
+                            <div class="mb-4 flex items-center justify-between text-sm text-gray-500">
+                                <span>Card <span x-text="currentIndex + 1"></span> / <span x-text="flashcards.length"></span></span>
+                                <span><i class="fas fa-check text-green-500 mr-1"></i><span x-text="knownCount"></span> Known</span>
+                            </div>
+
+                            <!-- Flashcard -->
+                            <div class="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer select-none"
+                                 @click="flipCard"
+                                 style="min-height: 350px;">
+                                <div class="p-8 text-center" x-show="!isFlipped">
+                                    <p class="text-sm text-gray-400 mb-4">Click to reveal meaning</p>
+                                    <h2 class="text-4xl font-bold text-gray-800 mb-4" x-text="currentCard?.word"></h2>
+                                    <p class="text-lg text-gray-500 mb-2" x-text="currentCard?.pronunciation"></p>
+                                    <span class="inline-block px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600" x-text="currentCard?.part_of_speech"></span>
+                                    <div class="mt-6">
+                                        <button @click.stop="speakWord(currentCard?.word)" class="text-primary hover:text-blue-600">
+                                            <i class="fas fa-volume-up text-2xl"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="p-8 text-center bg-blue-50" x-show="isFlipped">
+                                    <p class="text-sm text-gray-400 mb-4">Meaning</p>
+                                    <h2 class="text-3xl font-bold text-primary mb-4" x-text="currentCard?.meaning_vi"></h2>
+                                    <div class="mt-4 text-left bg-white rounded-lg p-4">
+                                        <p class="text-gray-700 mb-2"><strong>Example:</strong> <span x-text="currentCard?.example_en"></span></p>
+                                        <p class="text-gray-500 text-sm" x-text="currentCard?.example_vi"></p>
+                                    </div>
+                                    <div class="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500">
+                                        <span class="px-2 py-1 bg-gray-100 rounded" x-text="currentCard?.level"></span>
+                                        <span class="px-2 py-1 bg-gray-100 rounded" x-text="currentCard?.topic"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="mt-6 flex justify-center gap-4">
+                                <button @click="markCard(false)"
+                                        class="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                                    <i class="fas fa-times mr-2"></i>Don't Know
+                                </button>
+                                <button @click="markCard(true)"
+                                        class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                                    <i class="fas fa-check mr-2"></i>Know
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Study Complete -->
+                        <div x-show="studyComplete" class="bg-white rounded-xl shadow p-8 text-center max-w-lg mx-auto">
+                            <div class="w-20 h-20 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-4">
+                                <i class="fas fa-trophy text-4xl text-green-500"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold mb-2">Study Complete!</h3>
+                            <p class="text-gray-600 mb-4">
+                                You reviewed <span x-text="flashcards.length" class="font-bold"></span> words
+                            </p>
+                            <div class="grid grid-cols-2 gap-4 mb-6">
+                                <div class="p-4 bg-green-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-green-600" x-text="knownCount"></p>
+                                    <p class="text-sm text-gray-500">Known</p>
+                                </div>
+                                <div class="p-4 bg-red-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-red-600" x-text="flashcards.length - knownCount"></p>
+                                    <p class="text-sm text-gray-500">Need Review</p>
+                                </div>
+                            </div>
+                            <button @click="resetStudy" class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-600">
+                                <i class="fas fa-redo mr-2"></i>Study Again
+                            </button>
+                        </div>
+                    </div>
+                </template>
             </div>
         </div>
     </main>

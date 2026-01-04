@@ -110,16 +110,23 @@ class QuizService:
         topic: Optional[str] = None,
         topic_id: Optional[int] = None,
         level: Optional[str] = None,
-        use_learned_only: bool = True
+        use_learned_only: bool = True,
+        prioritize_weak: bool = True
     ) -> List[Vocabulary]:
-        """Get vocabulary for quiz generation."""
-        query = self.db.query(Vocabulary)
+        """Get vocabulary for quiz generation.
 
+        If prioritize_weak is True, prioritize words with:
+        - Fewer review counts
+        - Lower mastery level
+        - Fewer times in quiz (times_correct + times_incorrect)
+        """
         if use_learned_only:
-            query = query.join(
+            query = self.db.query(Vocabulary, UserVocabulary).join(
                 UserVocabulary,
                 UserVocabulary.vocabulary_id == Vocabulary.id
             )
+        else:
+            query = self.db.query(Vocabulary)
 
         if topic:
             query = query.filter(Vocabulary.topic == topic)
@@ -128,8 +135,22 @@ class QuizService:
         if level:
             query = query.filter(Vocabulary.level == level)
 
-        # Randomize selection
-        vocabulary = query.order_by(func.random()).limit(limit).all()
+        if use_learned_only and prioritize_weak:
+            # Order by: mastery_level ASC, review_count ASC, (times_correct + times_incorrect) ASC
+            # Then add some randomness
+            query = query.order_by(
+                UserVocabulary.mastery_level.asc(),
+                UserVocabulary.review_count.asc(),
+                (UserVocabulary.times_correct + UserVocabulary.times_incorrect).asc(),
+                func.random()
+            )
+            results = query.limit(limit).all()
+            # Extract just the Vocabulary objects
+            vocabulary = [r[0] for r in results]
+        else:
+            # Randomize selection
+            vocabulary = query.order_by(func.random()).limit(limit).all()
+
         return vocabulary
 
     def _generate_multiple_choice(
