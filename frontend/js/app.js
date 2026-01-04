@@ -743,6 +743,10 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
         // Flashcard integration
         fromFlashcards: false,
         studiedWordIds: [],
+        // Quiz history
+        quizHistory: [],
+        historyLoading: false,
+        showHistory: false,
 
         async init() {
             // Check if coming from flashcards
@@ -754,6 +758,68 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
                 // Show notification
                 Alpine.store('app')?.showToast?.('Quiz loaded with your studied words!', 'success');
             }
+
+            // Load quiz history
+            await this.loadQuizHistory();
+        },
+
+        async loadQuizHistory() {
+            this.historyLoading = true;
+            try {
+                const response = await fetchAPI('/quiz/history?limit=50');
+                if (response.success) {
+                    this.quizHistory = response.history || [];
+                }
+            } catch (error) {
+                console.error('Failed to load quiz history:', error);
+            } finally {
+                this.historyLoading = false;
+            }
+        },
+
+        async deleteQuiz(quizId) {
+            if (!confirm('Bạn có chắc muốn xóa quiz này?')) return;
+
+            try {
+                const response = await fetchAPI(`/quiz/${quizId}`, {
+                    method: 'DELETE'
+                });
+                if (response.success) {
+                    this.quizHistory = this.quizHistory.filter(q => q.id !== quizId);
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { message: 'Đã xóa quiz', type: 'success' }
+                    }));
+                }
+            } catch (error) {
+                console.error('Failed to delete quiz:', error);
+            }
+        },
+
+        formatDate(isoDate) {
+            if (!isoDate) return '-';
+            const date = new Date(isoDate);
+            return date.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        },
+
+        getQuizTypeName(type) {
+            const types = {
+                'multiple_choice': 'Trắc nghiệm',
+                'fill_blank': 'Điền từ',
+                'matching': 'Nối từ'
+            };
+            return types[type] || type;
+        },
+
+        getScoreColor(score) {
+            if (score >= 80) return 'text-green-600 bg-green-100';
+            if (score >= 60) return 'text-yellow-600 bg-yellow-100';
+            return 'text-red-600 bg-red-100';
         },
 
         async startQuiz() {

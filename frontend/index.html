@@ -858,6 +858,104 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Quiz History Section -->
+                        <div x-show="!quizActive" class="bg-white rounded-xl shadow p-6 mt-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold">
+                                    <i class="fas fa-history mr-2 text-purple-500"></i>
+                                    Lịch Sử Quiz
+                                </h3>
+                                <button @click="showHistory = !showHistory" class="text-sm text-primary hover:underline">
+                                    <span x-text="showHistory ? 'Ẩn lịch sử' : 'Xem lịch sử'"></span>
+                                    <i class="fas ml-1" :class="showHistory ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                </button>
+                            </div>
+
+                            <div x-show="showHistory" x-collapse>
+                                <!-- Loading state -->
+                                <div x-show="historyLoading" class="text-center py-8">
+                                    <div class="loading-spinner mx-auto mb-2"></div>
+                                    <p class="text-gray-500">Đang tải...</p>
+                                </div>
+
+                                <!-- Empty state -->
+                                <div x-show="!historyLoading && quizHistory.length === 0" class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-clipboard-list text-4xl mb-2"></i>
+                                    <p>Chưa có lịch sử quiz nào</p>
+                                </div>
+
+                                <!-- History table -->
+                                <div x-show="!historyLoading && quizHistory.length > 0" class="overflow-x-auto">
+                                    <table class="w-full text-sm">
+                                        <thead>
+                                            <tr class="text-left text-gray-500 border-b">
+                                                <th class="pb-3 pr-4">Thời gian</th>
+                                                <th class="pb-3 pr-4">Loại</th>
+                                                <th class="pb-3 pr-4 text-center">Câu hỏi</th>
+                                                <th class="pb-3 pr-4 text-center">Đúng</th>
+                                                <th class="pb-3 pr-4 text-center">Điểm</th>
+                                                <th class="pb-3 pr-4 text-center">Thời lượng</th>
+                                                <th class="pb-3 text-center">Thao tác</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="quiz in quizHistory" :key="quiz.id">
+                                                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                                    <td class="py-3 pr-4">
+                                                        <span class="text-gray-700" x-text="formatDate(quiz.completed_at)"></span>
+                                                    </td>
+                                                    <td class="py-3 pr-4">
+                                                        <span class="px-2 py-1 rounded text-xs"
+                                                              :class="quiz.quiz_type === 'multiple_choice' ? 'bg-blue-100 text-blue-700' :
+                                                                      quiz.quiz_type === 'fill_blank' ? 'bg-green-100 text-green-700' :
+                                                                      'bg-purple-100 text-purple-700'"
+                                                              x-text="getQuizTypeName(quiz.quiz_type)"></span>
+                                                    </td>
+                                                    <td class="py-3 pr-4 text-center" x-text="quiz.total_questions"></td>
+                                                    <td class="py-3 pr-4 text-center">
+                                                        <span class="font-medium" x-text="quiz.correct_answers + '/' + quiz.total_questions"></span>
+                                                    </td>
+                                                    <td class="py-3 pr-4 text-center">
+                                                        <span class="px-2 py-1 rounded font-semibold"
+                                                              :class="getScoreColor(quiz.score)"
+                                                              x-text="Math.round(quiz.score) + '%'"></span>
+                                                    </td>
+                                                    <td class="py-3 pr-4 text-center text-gray-500">
+                                                        <span x-text="quiz.time_taken ? Math.floor(quiz.time_taken / 60) + ':' + String(quiz.time_taken % 60).padStart(2, '0') : '-'"></span>
+                                                    </td>
+                                                    <td class="py-3 text-center">
+                                                        <button @click="deleteQuiz(quiz.id)"
+                                                                class="text-red-500 hover:text-red-700 p-1"
+                                                                title="Xóa quiz">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Summary stats -->
+                                <div x-show="!historyLoading && quizHistory.length > 0" class="mt-4 pt-4 border-t grid grid-cols-3 gap-4 text-center">
+                                    <div>
+                                        <p class="text-2xl font-bold text-primary" x-text="quizHistory.length"></p>
+                                        <p class="text-xs text-gray-500">Tổng số quiz</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold text-green-600"
+                                           x-text="Math.round(quizHistory.reduce((sum, q) => sum + (q.score || 0), 0) / quizHistory.length) + '%'"></p>
+                                        <p class="text-xs text-gray-500">Điểm TB</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold text-purple-600"
+                                           x-text="quizHistory.reduce((sum, q) => sum + (q.correct_answers || 0), 0)"></p>
+                                        <p class="text-xs text-gray-500">Tổng câu đúng</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </template>
             </div>
