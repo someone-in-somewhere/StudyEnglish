@@ -1105,6 +1105,8 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
                 if (response.success) {
                     this.translationHistory.splice(index, 1);
                     Alpine.store('app')?.showToast?.('Đã xóa!', 'success');
+                    // Auto refresh topic stats
+                    await this.loadTopicStats();
                 }
             } catch (error) {
                 console.error('Failed to delete:', error);
@@ -1330,6 +1332,8 @@ Your translation:`;
                 if (response.success) {
                     this.conversationHistory.splice(index, 1);
                     Alpine.store('app')?.showToast?.('Đã xóa!', 'success');
+                    // Auto refresh topic stats
+                    await this.loadTopicStats();
                 }
             } catch (error) {
                 console.error('Failed to delete:', error);
