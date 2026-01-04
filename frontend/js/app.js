@@ -281,6 +281,7 @@ document.addEventListener('alpine:init', () => {
         generatedPrompt: '',
         aiResponse: '',
         saveResult: null,
+        viewMode: 'saved', // 'saved' or 'learned'
 
         async init() {
             await this.loadTopics();
@@ -394,6 +395,7 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
             this.loading = true;
             this.generatedPrompt = '';
             this.saveResult = null;
+            this.viewMode = 'saved';
 
             try {
                 const url = `/vocabulary/topic/${encodeURIComponent(this.selectedTopic)}?level=${this.selectedLevel}`;
@@ -419,17 +421,11 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
             this.loading = true;
             this.generatedPrompt = '';
             this.saveResult = null;
+            this.viewMode = 'learned';
 
             try {
-                let url = '/vocabulary/learned?limit=100';
-                if (this.selectedTopic) {
-                    url += `&topic=${encodeURIComponent(this.selectedTopic)}`;
-                }
-                if (this.selectedLevel) {
-                    url += `&level=${this.selectedLevel}`;
-                }
-
-                const response = await fetchAPI(url);
+                // Load ALL learned vocabulary (no topic/level filter)
+                const response = await fetchAPI('/vocabulary/learned?limit=200');
 
                 if (response.success) {
                     this.vocabulary = response.vocabulary || [];
