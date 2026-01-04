@@ -15,6 +15,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
+from app.utils.timezone import to_iso_gmt7
 
 
 class Vocabulary(Base):
@@ -146,8 +147,8 @@ class Quiz(Base):
             "score": self.score,
             "time_taken": self.time_taken,
             "questions_data": self.questions_data,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None
+            "created_at": to_iso_gmt7(self.created_at),
+            "completed_at": to_iso_gmt7(self.completed_at)
         }
 
 
@@ -530,7 +531,7 @@ class TranslationPractice(Base):
             "length": self.length,
             "complexity": self.complexity,
             "score": self.score,
-            "date": self.practiced_at.isoformat() if self.practiced_at else None
+            "date": to_iso_gmt7(self.practiced_at)
         }
 
 
@@ -555,7 +556,7 @@ class ConversationPractice(Base):
             "style": self.style,
             "length": self.length,
             "score": self.score,
-            "date": self.practiced_at.isoformat() if self.practiced_at else None
+            "date": to_iso_gmt7(self.practiced_at)
         }
 
 
