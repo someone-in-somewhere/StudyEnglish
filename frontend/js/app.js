@@ -60,7 +60,7 @@ document.addEventListener('alpine:init', () => {
                 items: [
                     { id: 'dashboard', name: 'Dashboard', icon: 'fas fa-home' },
                     { id: 'vocabulary', name: 'Vocabulary', icon: 'fas fa-book' },
-                    { id: 'quiz', name: 'Quiz', icon: 'fas fa-question-circle' },
+                    { id: 'quiz', name: 'Quiz Vocabulary', icon: 'fas fa-question-circle' },
                     { id: 'srs', name: 'Review', icon: 'fas fa-redo', badge: null },
                 ]
             },
@@ -131,7 +131,7 @@ document.addEventListener('alpine:init', () => {
             const pageTitles = {
                 'dashboard': { title: 'Dashboard', desc: 'Overview of your learning progress' },
                 'vocabulary': { title: 'Vocabulary', desc: 'Learn new words with AI' },
-                'quiz': { title: 'Quiz', desc: 'Test your vocabulary knowledge' },
+                'quiz': { title: 'Quiz Vocabulary', desc: 'Test your vocabulary knowledge' },
                 'translation': { title: 'Translation', desc: 'English ↔ Vietnamese translation' },
                 'srs': { title: 'Spaced Repetition', desc: 'Review words for long-term memory' },
                 'chat': { title: 'AI Chat', desc: 'Practice conversation with AI tutor' },
