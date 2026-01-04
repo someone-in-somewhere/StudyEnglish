@@ -92,9 +92,16 @@ class QuizQuestion(BaseModel):
     id: int
     question: str
     options: Optional[List[str]] = None  # For multiple choice
-    correct_answer: str
+    correct_answer: Optional[Any] = None  # Can be int (index), str, or dict (matching)
     word: Optional[str] = None
     vocabulary_id: Optional[int] = None
+    hint: Optional[str] = None  # For fill in the blank
+    # For matching quiz
+    words: Optional[List[Dict[str, Any]]] = None
+    meanings: Optional[List[Dict[str, Any]]] = None
+    correct_mapping: Optional[Dict[str, int]] = None
+    vocabulary_ids: Optional[List[int]] = None
+    type: Optional[str] = None  # 'matching' for matching questions
 
 
 class QuizGenerateRequest(BaseModel):
