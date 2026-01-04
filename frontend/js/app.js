@@ -164,14 +164,25 @@ document.addEventListener('alpine:init', () => {
             totalWords: 0,
             quizAvg: 0,
             streak: 0,
-            studyTime: 0,
-            dueReviews: 0
+            dueReviews: 0,
+            // Practice stats
+            translationSessions: 0,
+            translationAvg: 0,
+            conversationSessions: 0,
+            conversationAvg: 0,
+            flashcardSessions: 0,
+            flashcardKnown: 0,
+            srsTotal: 0,
+            srsSuccessRate: 0
         },
+        recentActivity: [],
         progressChart: null,
         topicsChart: null,
 
         async init() {
             await this.loadDashboardData();
+            this.loadPracticeStats();
+            this.loadRecentActivity();
             this.initCharts();
         },
 
@@ -186,41 +197,145 @@ document.addEventListener('alpine:init', () => {
                     this.dashStats.totalWords = statsRes.stats.total_words || 0;
                     this.dashStats.quizAvg = statsRes.stats.quiz_avg_score || 0;
                     this.dashStats.streak = statsRes.stats.current_streak || 0;
-                    this.dashStats.studyTime = statsRes.stats.total_study_time || 0;
                 }
 
                 if (srsRes.success) {
                     this.dashStats.dueReviews = srsRes.stats.due_now || 0;
+                    this.dashStats.srsTotal = srsRes.stats.total_cards || 0;
+                    const total = (srsRes.stats.total_reviews || 0);
+                    const correct = (srsRes.stats.correct_reviews || 0);
+                    this.dashStats.srsSuccessRate = total > 0 ? Math.round((correct / total) * 100) : 0;
                 }
             } catch (error) {
                 console.error('Failed to load dashboard data:', error);
             }
         },
 
+        loadPracticeStats() {
+            // Load Translation Practice stats
+            const translationHistory = JSON.parse(localStorage.getItem('translationHistory') || '[]');
+            this.dashStats.translationSessions = translationHistory.length;
+            if (translationHistory.length > 0) {
+                const totalScore = translationHistory.reduce((sum, item) => sum + item.score, 0);
+                this.dashStats.translationAvg = (totalScore / translationHistory.length).toFixed(1);
+            } else {
+                this.dashStats.translationAvg = '-';
+            }
+
+            // Load Conversation Practice stats
+            const conversationHistory = JSON.parse(localStorage.getItem('conversationHistory') || '[]');
+            this.dashStats.conversationSessions = conversationHistory.length;
+            if (conversationHistory.length > 0) {
+                const totalScore = conversationHistory.reduce((sum, item) => sum + item.score, 0);
+                this.dashStats.conversationAvg = (totalScore / conversationHistory.length).toFixed(1);
+            } else {
+                this.dashStats.conversationAvg = '-';
+            }
+
+            // Load Flashcard stats
+            const flashcardStats = JSON.parse(localStorage.getItem('flashcardStats') || '{"sessions": 0, "totalKnown": 0, "totalCards": 0}');
+            this.dashStats.flashcardSessions = flashcardStats.sessions || 0;
+            if (flashcardStats.totalCards > 0) {
+                this.dashStats.flashcardKnown = Math.round((flashcardStats.totalKnown / flashcardStats.totalCards) * 100);
+            } else {
+                this.dashStats.flashcardKnown = 0;
+            }
+        },
+
+        loadRecentActivity() {
+            const translationHistory = JSON.parse(localStorage.getItem('translationHistory') || '[]');
+            const conversationHistory = JSON.parse(localStorage.getItem('conversationHistory') || '[]');
+
+            // Merge and sort by date
+            const allActivity = [
+                ...translationHistory.map(item => ({ ...item, type: 'Translation' })),
+                ...conversationHistory.map(item => ({ ...item, type: 'Conversation' }))
+            ];
+
+            // Sort by date descending and take top 10
+            allActivity.sort((a, b) => new Date(b.date) - new Date(a.date));
+            this.recentActivity = allActivity.slice(0, 10);
+        },
+
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        },
+
         initCharts() {
-            // Progress Chart
+            // Progress Chart - Practice Score Trend
             const progressCtx = document.getElementById('progressChart');
             if (progressCtx) {
+                const translationHistory = JSON.parse(localStorage.getItem('translationHistory') || '[]');
+                const conversationHistory = JSON.parse(localStorage.getItem('conversationHistory') || '[]');
+
+                // Get last 7 days scores
+                const last7Days = [];
+                const translationScores = [];
+                const conversationScores = [];
+
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                    last7Days.push(dateStr);
+
+                    const dayStart = new Date(date.setHours(0, 0, 0, 0));
+                    const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+
+                    // Calculate average translation score for this day
+                    const dayTranslations = translationHistory.filter(item => {
+                        const itemDate = new Date(item.date);
+                        return itemDate >= dayStart && itemDate <= dayEnd;
+                    });
+                    translationScores.push(dayTranslations.length > 0
+                        ? dayTranslations.reduce((sum, item) => sum + item.score, 0) / dayTranslations.length
+                        : null);
+
+                    // Calculate average conversation score for this day
+                    const dayConversations = conversationHistory.filter(item => {
+                        const itemDate = new Date(item.date);
+                        return itemDate >= dayStart && itemDate <= dayEnd;
+                    });
+                    conversationScores.push(dayConversations.length > 0
+                        ? dayConversations.reduce((sum, item) => sum + item.score, 0) / dayConversations.length
+                        : null);
+                }
+
                 this.progressChart = new Chart(progressCtx, {
                     type: 'line',
                     data: {
-                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        labels: last7Days,
                         datasets: [{
-                            label: 'Words Learned',
-                            data: [5, 8, 12, 7, 10, 15, 9],
+                            label: 'Translation',
+                            data: translationScores,
+                            borderColor: '#8B5CF6',
+                            tension: 0.4,
+                            fill: false,
+                            spanGaps: true
+                        }, {
+                            label: 'Conversation',
+                            data: conversationScores,
                             borderColor: '#3B82F6',
                             tension: 0.4,
-                            fill: true,
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                            fill: false,
+                            spanGaps: true
                         }]
                     },
                     options: {
                         responsive: true,
                         plugins: {
-                            legend: { display: false }
+                            legend: { display: true, position: 'top' }
                         },
                         scales: {
-                            y: { beginAtZero: true }
+                            y: { beginAtZero: true, max: 10 }
                         }
                     }
                 });
@@ -229,29 +344,75 @@ document.addEventListener('alpine:init', () => {
             // Topics Chart
             const topicsCtx = document.getElementById('topicsChart');
             if (topicsCtx) {
-                this.topicsChart = new Chart(topicsCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Work', 'Travel', 'Food', 'Technology', 'Other'],
-                        datasets: [{
-                            data: [30, 25, 20, 15, 10],
-                            backgroundColor: [
-                                '#3B82F6',
-                                '#10B981',
-                                '#F59E0B',
-                                '#8B5CF6',
-                                '#6B7280'
-                            ]
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { position: 'bottom' }
+                this.loadTopicsData().then(topicsData => {
+                    this.topicsChart = new Chart(topicsCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: topicsData.labels,
+                            datasets: [{
+                                data: topicsData.data,
+                                backgroundColor: [
+                                    '#3B82F6',
+                                    '#10B981',
+                                    '#F59E0B',
+                                    '#8B5CF6',
+                                    '#EF4444',
+                                    '#6B7280'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
                         }
-                    }
+                    });
                 });
             }
+        },
+
+        async loadTopicsData() {
+            try {
+                const response = await fetchAPI('/vocabulary/user?limit=1000');
+                if (response.success && response.vocabulary) {
+                    // Count words by topic
+                    const topicCounts = {};
+                    response.vocabulary.forEach(word => {
+                        const topic = word.topic || 'Other';
+                        // Shorten topic name
+                        const shortTopic = topic.split(' and ')[0].split(' ')[0];
+                        topicCounts[shortTopic] = (topicCounts[shortTopic] || 0) + 1;
+                    });
+
+                    // Sort by count and take top 5
+                    const sortedTopics = Object.entries(topicCounts)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 5);
+
+                    // Calculate "Other" if there are more topics
+                    const otherCount = Object.entries(topicCounts)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(5)
+                        .reduce((sum, [_, count]) => sum + count, 0);
+
+                    if (otherCount > 0) {
+                        sortedTopics.push(['Other', otherCount]);
+                    }
+
+                    return {
+                        labels: sortedTopics.map(([topic]) => topic),
+                        data: sortedTopics.map(([_, count]) => count)
+                    };
+                }
+            } catch (error) {
+                console.error('Failed to load topics data:', error);
+            }
+            // Return default data if failed
+            return {
+                labels: ['No Data'],
+                data: [1]
+            };
         }
     }));
 
@@ -1123,7 +1284,17 @@ START the conversation now! Greet me and ask an opening question about "${this.c
                 this.isFlipped = false;
             } else {
                 this.studyComplete = true;
+                this.saveFlashcardStats();
             }
+        },
+
+        saveFlashcardStats() {
+            // Save flashcard session stats for dashboard
+            const stats = JSON.parse(localStorage.getItem('flashcardStats') || '{"sessions": 0, "totalKnown": 0, "totalCards": 0}');
+            stats.sessions++;
+            stats.totalKnown += this.knownCount;
+            stats.totalCards += this.flashcards.length;
+            localStorage.setItem('flashcardStats', JSON.stringify(stats));
         },
 
         resetStudy() {
