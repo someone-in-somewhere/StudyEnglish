@@ -752,22 +752,17 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
 
     // Translation Page Component
     Alpine.data('translationPage', () => ({
-        sourceLang: 'en',
-        targetLang: 'vi',
-        sourceText: '',
-        translatedText: '',
-        adjustLevel: '',
         loading: false,
-        history: [],
         // Translation Practice
         practiceTopic: '',
         practiceLevel: '',
         practiceLength: '',
         practiceDirection: '',
+        sentenceComplexity: '',
         practicePrompt: '',
 
         async init() {
-            await this.loadHistory();
+            // No initialization needed
         },
 
         async loadHistory() {
@@ -832,9 +827,9 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
 
         generatePracticePrompt() {
             const lengthMap = {
-                'short': '3-5 sentences',
-                'medium': '6-10 sentences',
-                'long': '11-15 sentences'
+                'short': '5-8 sentences',
+                'medium': '13-15 sentences',
+                'long': '17-25 sentences'
             };
 
             const levelDescMap = {
@@ -845,10 +840,21 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
                 'C1': 'advanced vocabulary, idioms, and sophisticated grammar'
             };
 
+            const complexityDescMap = {
+                'simple_short': 'simple sentences with 5-10 words each',
+                'simple_medium': 'simple sentences with 10-15 words each',
+                'simple_long': 'simple sentences with 15-25 words each',
+                'compound': 'compound sentences using conjunctions (and, but, or, so, yet)',
+                'complex': 'complex sentences with subordinate clauses (because, although, when, if, that)',
+                'mixed': 'a natural mix of simple, compound, and complex sentences'
+            };
+
             const sourceLang = this.practiceDirection === 'vi_to_en' ? 'Vietnamese' : 'English';
             const targetLang = this.practiceDirection === 'vi_to_en' ? 'English' : 'Vietnamese';
             const length = lengthMap[this.practiceLength];
             const levelDesc = levelDescMap[this.practiceLevel];
+            const complexityDesc = complexityDescMap[this.sentenceComplexity];
+            const maxSentences = length.split('-')[1].replace(' sentences', '');
 
             this.practicePrompt = `You are a language tutor helping me practice ${sourceLang} to ${targetLang} translation.
 
@@ -857,8 +863,15 @@ TASK: Create a translation practice exercise following these requirements:
 1. PASSAGE GENERATION:
    - Topic: ${this.practiceTopic}
    - Level: ${this.practiceLevel} (${levelDesc})
-   - Length: ${length}
+   - Number of sentences: ${length}
+   - Sentence complexity: ${complexityDesc}
    - Language: Write the passage in ${sourceLang}
+
+   IMPORTANT REQUIREMENTS:
+   - All sentences must be COHERENT and form a meaningful, connected passage (not random isolated sentences)
+   - Use CONSISTENT tenses throughout the passage (choose appropriate tenses based on the narrative)
+   - Sentences should flow naturally and logically from one to another
+   - Include transitional words/phrases to connect ideas
 
 2. PRACTICE FORMAT:
    After generating the passage, present it sentence by sentence for me to translate.
@@ -866,24 +879,28 @@ TASK: Create a translation practice exercise following these requirements:
    For each sentence:
    - Show the original sentence in ${sourceLang}
    - Wait for my translation to ${targetLang}
-   - After I respond, grade my translation (score out of 10)
-   - Point out any errors and explain corrections
-   - Provide a model translation for comparison
+   - After I respond:
+     • Grade my translation (score out of 10)
+     • Point out any errors (grammar, vocabulary, word order, tense, etc.)
+     • Explain corrections in detail
+     • Provide a model translation for comparison
    - Then move to the next sentence
 
 3. FINAL REVIEW:
    After I complete all sentences:
-   - Give an overall score and feedback
-   - List common mistakes I made
-   - Provide a "Vocabulary to Remember" section with:
-     * New/difficult words from the passage
-     * Their meanings in both languages
-     * Example sentences
+   - Give an overall score and detailed feedback
+   - List common mistakes I made and how to avoid them
+   - Comment on my tense usage and consistency
+   - Provide a "📚 Vocabulary to Remember" section with:
+     • 10-15 important words/phrases from the passage
+     • Their meanings in both ${sourceLang} and ${targetLang}
+     • Part of speech (noun, verb, adj, etc.)
+     • Example sentences showing correct usage
 
-START by generating the ${sourceLang} passage about "${this.practiceTopic}" and present the FIRST sentence for me to translate.
+START by generating the ${sourceLang} passage about "${this.practiceTopic}" (${length}, ${complexityDesc}) and present the FIRST sentence for me to translate.
 
 Format:
-📝 Sentence 1/${length.split('-')[1].replace(' sentences', '')}:
+📝 Sentence 1/${maxSentences}:
 [First sentence in ${sourceLang}]
 
 Your translation:`;

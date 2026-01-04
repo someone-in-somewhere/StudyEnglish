@@ -612,63 +612,8 @@
             <div x-show="currentPage === 'translation'" x-cloak class="slide-enter">
                 <template x-if="currentPage === 'translation'">
                     <div x-data="translationPage" x-init="init()">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <!-- Source -->
-                            <div class="bg-white rounded-xl shadow p-6">
-                                <div class="flex items-center justify-between mb-4">
-                                    <select x-model="sourceLang" class="border rounded-lg px-3 py-2">
-                                        <option value="en">English</option>
-                                        <option value="vi">Vietnamese</option>
-                                    </select>
-                                    <button @click="swapLanguages" class="p-2 text-gray-500 hover:text-primary">
-                                        <i class="fas fa-exchange-alt"></i>
-                                    </button>
-                                </div>
-                                <textarea x-model="sourceText"
-                                          placeholder="Enter text to translate..."
-                                          class="w-full h-48 p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
-                                <div class="flex items-center justify-between mt-4">
-                                    <span class="text-sm text-gray-500" x-text="sourceText.length + ' characters'"></span>
-                                    <button @click="translate"
-                                            :disabled="loading || !sourceText.trim()"
-                                            class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 transition-colors">
-                                        <span x-show="!loading"><i class="fas fa-language mr-2"></i>Translate</span>
-                                        <span x-show="loading"><div class="loading-spinner inline-block"></div></span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Target -->
-                            <div class="bg-white rounded-xl shadow p-6">
-                                <div class="flex items-center justify-between mb-4">
-                                    <select x-model="targetLang" class="border rounded-lg px-3 py-2">
-                                        <option value="vi">Vietnamese</option>
-                                        <option value="en">English</option>
-                                    </select>
-                                    <button @click="copyTranslation" x-show="translatedText" class="p-2 text-gray-500 hover:text-primary">
-                                        <i class="fas fa-copy"></i>
-                                    </button>
-                                </div>
-                                <div class="w-full h-48 p-4 border rounded-lg bg-gray-50 overflow-auto">
-                                    <p x-text="translatedText || 'Translation will appear here...'"
-                                       :class="translatedText ? 'text-gray-800' : 'text-gray-400'"></p>
-                                </div>
-                                <div class="mt-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Adjust Level (optional)</label>
-                                    <select x-model="adjustLevel" class="border rounded-lg px-3 py-2">
-                                        <option value="">No adjustment</option>
-                                        <option value="A1">Simplify to A1</option>
-                                        <option value="A2">Simplify to A2</option>
-                                        <option value="B1">Adjust to B1</option>
-                                        <option value="B2">Adjust to B2</option>
-                                        <option value="C1">Complexify to C1</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Translation Practice Section -->
-                        <div class="mt-6 bg-white rounded-xl shadow p-6">
+                        <div class="bg-white rounded-xl shadow p-6">
                             <h3 class="text-lg font-semibold mb-4">
                                 <i class="fas fa-pen-fancy mr-2 text-accent"></i>
                                 Translation Practice (Luyện dịch)
@@ -677,22 +622,35 @@
                                 Tạo prompt để luyện dịch đoạn văn với AI (ChatGPT, Claude, v.v.)
                             </p>
 
-                            <!-- Practice Options -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                            <!-- Practice Options Row 1 -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Topic (Chủ đề) <span class="text-red-500">*</span></label>
                                     <select x-model="practiceTopic" class="w-full border rounded-lg px-3 py-2">
                                         <option value="">-- Chọn chủ đề --</option>
-                                        <option value="Daily Life">Daily Life (Cuộc sống hàng ngày)</option>
-                                        <option value="Travel">Travel (Du lịch)</option>
-                                        <option value="Work & Business">Work & Business (Công việc)</option>
-                                        <option value="Technology">Technology (Công nghệ)</option>
-                                        <option value="Health">Health (Sức khỏe)</option>
-                                        <option value="Education">Education (Giáo dục)</option>
-                                        <option value="Environment">Environment (Môi trường)</option>
-                                        <option value="Culture">Culture (Văn hóa)</option>
-                                        <option value="Food">Food (Ẩm thực)</option>
-                                        <option value="Sports">Sports (Thể thao)</option>
+                                        <option value="Personal and Communication">Personal and Communication (Giao tiếp cá nhân)</option>
+                                        <option value="Work and Business">Work and Business (Công việc và Kinh doanh)</option>
+                                        <option value="Meetings and Presentations">Meetings and Presentations (Họp và Thuyết trình)</option>
+                                        <option value="Email and Written Communication">Email and Written Communication (Email và Giao tiếp văn bản)</option>
+                                        <option value="Small Talk and Social Skills">Small Talk and Social Skills (Trò chuyện xã giao)</option>
+                                        <option value="Science and Technology">Science and Technology (Khoa học và Công nghệ)</option>
+                                        <option value="Transportation and Travel">Transportation and Travel (Giao thông và Du lịch)</option>
+                                        <option value="Shopping and Money">Shopping and Money (Mua sắm và Tiền bạc)</option>
+                                        <option value="Everyday Life">Everyday Life (Cuộc sống hàng ngày)</option>
+                                        <option value="Food and Drink">Food and Drink (Đồ ăn và Thức uống)</option>
+                                        <option value="Entertainment and Leisure">Entertainment and Leisure (Giải trí và Nghỉ ngơi)</option>
+                                        <option value="Health and Medicine">Health and Medicine (Sức khỏe và Y tế)</option>
+                                        <option value="School and Education">School and Education (Trường học và Giáo dục)</option>
+                                        <option value="Public Services">Public Services (Dịch vụ công cộng)</option>
+                                        <option value="Nature and Environment">Nature and Environment (Thiên nhiên và Môi trường)</option>
+                                        <option value="Sports and Fitness">Sports and Fitness (Thể thao và Rèn luyện)</option>
+                                        <option value="Culture and Society">Culture and Society (Văn hóa và Xã hội)</option>
+                                        <option value="Arts and Literature">Arts and Literature (Nghệ thuật và Văn học)</option>
+                                        <option value="History and Geography">History and Geography (Lịch sử và Địa lý)</option>
+                                        <option value="Government and Politics">Government and Politics (Chính phủ và Chính trị)</option>
+                                        <option value="Law and Justice">Law and Justice (Pháp luật và Công lý)</option>
+                                        <option value="Religion and Spirituality">Religion and Spirituality (Tôn giáo và Tâm linh)</option>
+                                        <option value="Philosophy and Ethics">Philosophy and Ethics (Triết học và Đạo đức)</option>
                                     </select>
                                 </div>
                                 <div>
@@ -707,15 +665,6 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Length (Độ dài) <span class="text-red-500">*</span></label>
-                                    <select x-model="practiceLength" class="w-full border rounded-lg px-3 py-2">
-                                        <option value="">-- Chọn độ dài --</option>
-                                        <option value="short">Short - 3-5 sentences (Ngắn)</option>
-                                        <option value="medium">Medium - 6-10 sentences (Trung bình)</option>
-                                        <option value="long">Long - 11-15 sentences (Dài)</option>
-                                    </select>
-                                </div>
-                                <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Direction (Hướng dịch) <span class="text-red-500">*</span></label>
                                     <select x-model="practiceDirection" class="w-full border rounded-lg px-3 py-2">
                                         <option value="">-- Chọn hướng dịch --</option>
@@ -725,8 +674,33 @@
                                 </div>
                             </div>
 
+                            <!-- Practice Options Row 2 -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Sentence Complexity (Độ phức tạp câu) <span class="text-red-500">*</span></label>
+                                    <select x-model="sentenceComplexity" class="w-full border rounded-lg px-3 py-2">
+                                        <option value="">-- Chọn độ phức tạp --</option>
+                                        <option value="simple_short">Simple & Short (Câu đơn ngắn)</option>
+                                        <option value="simple_medium">Simple & Medium (Câu đơn trung bình)</option>
+                                        <option value="simple_long">Simple & Long (Câu đơn dài)</option>
+                                        <option value="compound">Compound Sentences (Câu ghép)</option>
+                                        <option value="complex">Complex Sentences (Câu phức)</option>
+                                        <option value="mixed">Mixed (Kết hợp các loại câu)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Passage Length (Số câu trong đoạn) <span class="text-red-500">*</span></label>
+                                    <select x-model="practiceLength" class="w-full border rounded-lg px-3 py-2">
+                                        <option value="">-- Chọn độ dài --</option>
+                                        <option value="short">Short - 5-8 sentences (Ngắn)</option>
+                                        <option value="medium">Medium - 13-15 sentences (Trung bình)</option>
+                                        <option value="long">Long - 17-25 sentences (Dài)</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <button @click="generatePracticePrompt"
-                                    :disabled="!practiceTopic || !practiceLevel || !practiceLength || !practiceDirection"
+                                    :disabled="!practiceTopic || !practiceLevel || !practiceLength || !practiceDirection || !sentenceComplexity"
                                     class="px-6 py-3 bg-accent text-white rounded-lg hover:bg-purple-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
                                 <i class="fas fa-magic mr-2"></i>Generate Prompt
                             </button>
@@ -745,28 +719,10 @@
                             </div>
                             <textarea readonly
                                       x-model="practicePrompt"
-                                      class="w-full h-64 p-4 border rounded-lg bg-gray-50 text-sm font-mono resize-none"></textarea>
+                                      class="w-full h-80 p-4 border rounded-lg bg-gray-50 text-sm font-mono resize-none"></textarea>
                             <p class="text-sm text-gray-500 mt-2">
                                 <i class="fas fa-arrow-right mr-1"></i>Copy prompt này và paste vào ChatGPT, Claude hoặc AI khác để bắt đầu luyện dịch
                             </p>
-                        </div>
-
-                        <!-- Translation History -->
-                        <div class="mt-6 bg-white rounded-xl shadow p-6">
-                            <h3 class="text-lg font-semibold mb-4">Recent Translations</h3>
-                            <div class="space-y-3">
-                                <template x-for="item in history" :key="item.id">
-                                    <div class="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer" @click="loadTranslation(item)">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex-1 overflow-hidden">
-                                                <p class="text-sm text-gray-600 truncate" x-text="item.source_text"></p>
-                                                <p class="text-sm text-primary truncate" x-text="item.translated_text"></p>
-                                            </div>
-                                            <span class="text-xs text-gray-400 ml-4" x-text="item.source_lang.toUpperCase() + ' → ' + item.target_lang.toUpperCase()"></span>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
                         </div>
                     </div>
                 </template>
