@@ -378,20 +378,6 @@
                             </div>
                         </div>
 
-                        <!-- Topics Grid -->
-                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
-                            <template x-for="topic in topics" :key="topic.id">
-                                <div @click="selectedTopic = topic.name"
-                                     class="p-4 rounded-lg cursor-pointer transition-all hover:scale-105"
-                                     :class="selectedTopic === topic.name ? 'ring-2 ring-primary shadow-lg' : 'bg-white shadow'"
-                                     :style="'background-color: ' + topic.color + '20'">
-                                    <i :class="'fas ' + topic.icon + ' text-2xl mb-2'" :style="'color: ' + topic.color"></i>
-                                    <p class="text-sm font-medium truncate" x-text="topic.name"></p>
-                                    <p class="text-xs text-gray-500" x-text="topic.word_count + ' words'"></p>
-                                </div>
-                            </template>
-                        </div>
-
                         <!-- Saved Vocabulary List -->
                         <div x-show="vocabulary.length > 0" class="space-y-4">
                             <h3 class="text-lg font-semibold">
