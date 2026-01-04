@@ -1790,6 +1790,240 @@
                     </div>
                 </template>
             </div>
+
+            <!-- Study Schedule Page -->
+            <div x-show="currentPage === 'schedule'" x-cloak class="slide-enter">
+                <template x-if="currentPage === 'schedule'">
+                    <div x-data="schedulePage" x-init="init()">
+                        <!-- Header -->
+                        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow p-6 mb-6 text-white">
+                            <h2 class="text-2xl font-bold mb-2">
+                                <i class="fas fa-calendar-alt mr-2"></i>
+                                Lịch Học Tiếng Anh Chuyên Nghiệp
+                            </h2>
+                            <p class="text-indigo-100">Kế hoạch học tập được thiết kế bởi chuyên gia, tối ưu hóa khả năng ghi nhớ và tiến bộ</p>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white rounded-xl shadow p-4 text-center">
+                                <div class="text-3xl font-bold text-primary" x-text="todayCompleted + '/' + todayTotal"></div>
+                                <div class="text-sm text-gray-500">Hoàn thành hôm nay</div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-4 text-center">
+                                <div class="text-3xl font-bold text-green-600" x-text="weekStreak"></div>
+                                <div class="text-sm text-gray-500">Ngày liên tiếp</div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-4 text-center">
+                                <div class="text-3xl font-bold text-purple-600" x-text="currentLevel"></div>
+                                <div class="text-sm text-gray-500">Cấp độ hiện tại</div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-4 text-center">
+                                <div class="text-3xl font-bold text-orange-600" x-text="weeklyProgress + '%'"></div>
+                                <div class="text-sm text-gray-500">Tiến độ tuần</div>
+                            </div>
+                        </div>
+
+                        <!-- Today's Schedule -->
+                        <div class="bg-white rounded-xl shadow p-6 mb-6">
+                            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                <i class="fas fa-sun mr-2 text-yellow-500"></i>
+                                Lịch Học Hôm Nay - <span class="text-primary ml-2" x-text="getCurrentDay()"></span>
+                            </h3>
+
+                            <div class="space-y-4">
+                                <template x-for="(session, idx) in todaySchedule" :key="idx">
+                                    <div class="border rounded-lg p-4 transition-all"
+                                         :class="session.completed ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200 hover:border-primary'">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-12 h-12 rounded-full flex items-center justify-center"
+                                                     :class="session.completed ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'">
+                                                    <i :class="session.icon"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-semibold" x-text="session.title"></h4>
+                                                    <p class="text-sm text-gray-500" x-text="session.time + ' • ' + session.duration"></p>
+                                                    <p class="text-xs text-gray-400 mt-1" x-text="session.description"></p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <button x-show="!session.completed"
+                                                        @click="goToActivity(session.page)"
+                                                        class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 text-sm">
+                                                    <i class="fas fa-play mr-1"></i> Bắt đầu
+                                                </button>
+                                                <button x-show="!session.completed"
+                                                        @click="markCompleted(idx)"
+                                                        class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 text-sm">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <span x-show="session.completed" class="px-4 py-2 bg-green-500 text-white rounded-lg text-sm">
+                                                    <i class="fas fa-check mr-1"></i> Hoàn thành
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Weekly Plan -->
+                        <div class="bg-white rounded-xl shadow p-6 mb-6">
+                            <h3 class="text-lg font-semibold mb-4">
+                                <i class="fas fa-calendar-week mr-2 text-indigo-500"></i>
+                                Kế Hoạch Tuần
+                            </h3>
+
+                            <div class="overflow-x-auto">
+                                <div class="grid grid-cols-7 gap-2 min-w-[700px]">
+                                    <template x-for="(day, idx) in weekPlan" :key="idx">
+                                        <div class="border rounded-lg p-3 text-center transition-all"
+                                             :class="idx === currentDayIndex ? 'border-primary bg-blue-50 ring-2 ring-primary' : 'border-gray-200'"
+                                             @click="showDayDetail(idx)">
+                                            <div class="font-semibold text-sm" :class="idx === currentDayIndex ? 'text-primary' : 'text-gray-700'" x-text="day.name"></div>
+                                            <div class="text-xs text-gray-500 mb-2" x-text="day.date"></div>
+                                            <div class="space-y-1">
+                                                <template x-for="(task, tidx) in day.tasks.slice(0, 3)" :key="tidx">
+                                                    <div class="text-xs px-2 py-1 rounded truncate"
+                                                         :class="task.type === 'vocabulary' ? 'bg-blue-100 text-blue-700' :
+                                                                 task.type === 'quiz' ? 'bg-green-100 text-green-700' :
+                                                                 task.type === 'practice' ? 'bg-purple-100 text-purple-700' :
+                                                                 'bg-orange-100 text-orange-700'"
+                                                         x-text="task.short"></div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Study Tips from Expert -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <!-- Study Method -->
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <h3 class="text-lg font-semibold mb-4">
+                                    <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>
+                                    Phương Pháp Học Hiệu Quả
+                                </h3>
+                                <div class="space-y-3">
+                                    <div class="flex items-start gap-3">
+                                        <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm flex-shrink-0">1</span>
+                                        <div>
+                                            <h4 class="font-medium">Học từ vựng mới (15-20 phút)</h4>
+                                            <p class="text-sm text-gray-500">Sử dụng <strong>Vocabulary</strong> để thêm 5-10 từ mới mỗi ngày</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <span class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm flex-shrink-0">2</span>
+                                        <div>
+                                            <h4 class="font-medium">Flashcard Review (10-15 phút)</h4>
+                                            <p class="text-sm text-gray-500">Dùng <strong>Flashcards</strong> để ghi nhớ với phương pháp lật thẻ</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <span class="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm flex-shrink-0">3</span>
+                                        <div>
+                                            <h4 class="font-medium">Quiz kiểm tra (10 phút)</h4>
+                                            <p class="text-sm text-gray-500">Làm <strong>Quiz</strong> để củng cố và kiểm tra tiến độ</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <span class="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm flex-shrink-0">4</span>
+                                        <div>
+                                            <h4 class="font-medium">SRS Review (5-10 phút)</h4>
+                                            <p class="text-sm text-gray-500">Hoàn thành <strong>Review</strong> để tối ưu ghi nhớ dài hạn</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <span class="w-6 h-6 bg-indigo-500 text-white rounded-full flex items-center justify-center text-sm flex-shrink-0">5</span>
+                                        <div>
+                                            <h4 class="font-medium">Thực hành (15-20 phút)</h4>
+                                            <p class="text-sm text-gray-500"><strong>Translation</strong> & <strong>Conversation</strong> để áp dụng thực tế</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Daily Goals -->
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <h3 class="text-lg font-semibold mb-4">
+                                    <i class="fas fa-bullseye mr-2 text-red-500"></i>
+                                    Mục Tiêu Hàng Ngày
+                                </h3>
+                                <div class="space-y-4">
+                                    <template x-for="(goal, idx) in dailyGoals" :key="idx">
+                                        <div>
+                                            <div class="flex justify-between text-sm mb-1">
+                                                <span x-text="goal.name"></span>
+                                                <span class="text-gray-500" x-text="goal.current + '/' + goal.target"></span>
+                                            </div>
+                                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                                <div class="h-2 rounded-full transition-all"
+                                                     :class="goal.color"
+                                                     :style="'width: ' + Math.min(100, (goal.current / goal.target) * 100) + '%'"></div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div class="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg">
+                                    <h4 class="font-medium text-indigo-700 mb-2">
+                                        <i class="fas fa-star mr-1"></i> Mẹo của chuyên gia
+                                    </h4>
+                                    <p class="text-sm text-gray-600" x-text="expertTip"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature Quick Access -->
+                        <div class="bg-white rounded-xl shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">
+                                <i class="fas fa-rocket mr-2 text-primary"></i>
+                                Truy Cập Nhanh Các Tính Năng
+                            </h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                                <button @click="$dispatch('navigate', 'vocabulary')"
+                                        class="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-center">
+                                    <i class="fas fa-book text-2xl text-blue-600 mb-2"></i>
+                                    <div class="text-sm font-medium">Vocabulary</div>
+                                </button>
+                                <button @click="$dispatch('navigate', 'flashcards')"
+                                        class="p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors text-center">
+                                    <i class="fas fa-clone text-2xl text-yellow-600 mb-2"></i>
+                                    <div class="text-sm font-medium">Flashcards</div>
+                                </button>
+                                <button @click="$dispatch('navigate', 'quiz')"
+                                        class="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors text-center">
+                                    <i class="fas fa-question-circle text-2xl text-green-600 mb-2"></i>
+                                    <div class="text-sm font-medium">Quiz</div>
+                                </button>
+                                <button @click="$dispatch('navigate', 'srs')"
+                                        class="p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors text-center">
+                                    <i class="fas fa-redo text-2xl text-orange-600 mb-2"></i>
+                                    <div class="text-sm font-medium">Review</div>
+                                </button>
+                                <button @click="$dispatch('navigate', 'translation')"
+                                        class="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-center">
+                                    <i class="fas fa-language text-2xl text-purple-600 mb-2"></i>
+                                    <div class="text-sm font-medium">Translation</div>
+                                </button>
+                                <button @click="$dispatch('navigate', 'conversation')"
+                                        class="p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors text-center">
+                                    <i class="fas fa-comments text-2xl text-indigo-600 mb-2"></i>
+                                    <div class="text-sm font-medium">Conversation</div>
+                                </button>
+                                <button @click="$dispatch('navigate', 'analytics')"
+                                        class="p-4 bg-pink-50 rounded-lg hover:bg-pink-100 transition-colors text-center">
+                                    <i class="fas fa-chart-line text-2xl text-pink-600 mb-2"></i>
+                                    <div class="text-sm font-medium">Analytics</div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
         </div>
     </main>
 

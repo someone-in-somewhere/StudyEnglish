@@ -72,6 +72,7 @@ document.addEventListener('alpine:init', () => {
                     { id: 'flashcards', name: 'Flashcards', icon: 'fas fa-clone' },
                     { id: 'export', name: 'Export/Import', icon: 'fas fa-file-export' },
                     { id: 'analytics', name: 'Analytics', icon: 'fas fa-chart-line' },
+                    { id: 'schedule', name: 'Study Schedule', icon: 'fas fa-calendar-alt' },
                 ]
             }
         ],
@@ -1941,6 +1942,250 @@ START the conversation now! Greet me and ask an opening question about "${this.c
             this.messages = [];
             this.sessionId = 'session_' + Date.now();
             this.init();
+        }
+    }));
+
+    // Study Schedule Page Component
+    Alpine.data('schedulePage', () => ({
+        todayCompleted: 0,
+        todayTotal: 5,
+        weekStreak: 0,
+        currentLevel: 'A2',
+        weeklyProgress: 0,
+        currentDayIndex: new Date().getDay(),
+
+        todaySchedule: [],
+        weekPlan: [],
+        dailyGoals: [],
+        expertTips: [
+            "Học từ vựng vào buổi sáng khi não bộ còn tươi mới sẽ giúp ghi nhớ tốt hơn 30%.",
+            "Áp dụng quy tắc 20-20-20: Học 20 phút, nghỉ 20 giây, nhìn xa 20 feet để giảm mỏi mắt.",
+            "Sử dụng Spaced Repetition (SRS) là phương pháp được khoa học chứng minh hiệu quả nhất.",
+            "Kết hợp nghe, nói, đọc, viết trong mỗi buổi học để kích hoạt đa giác quan.",
+            "Đặt mục tiêu nhỏ, đạt được sẽ tạo động lực lớn hơn cho các mục tiêu tiếp theo.",
+            "Review từ cũ trước khi học từ mới - não bộ cần 5-7 lần lặp lại để ghi nhớ lâu dài.",
+            "Thực hành conversation hàng ngày, dù chỉ 5 phút, cũng hiệu quả hơn 1 giờ mỗi tuần.",
+            "Học từ vựng theo chủ đề giúp tạo liên kết ngữ nghĩa và nhớ lâu hơn."
+        ],
+        expertTip: '',
+
+        init() {
+            this.loadFromStorage();
+            this.generateTodaySchedule();
+            this.generateWeekPlan();
+            this.loadDailyGoals();
+            this.expertTip = this.expertTips[Math.floor(Math.random() * this.expertTips.length)];
+            this.loadStats();
+        },
+
+        loadFromStorage() {
+            const today = new Date().toDateString();
+            const saved = localStorage.getItem('scheduleData');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (data.date === today) {
+                    this.todaySchedule = data.todaySchedule || [];
+                    this.todayCompleted = this.todaySchedule.filter(s => s.completed).length;
+                }
+            }
+        },
+
+        saveToStorage() {
+            const data = {
+                date: new Date().toDateString(),
+                todaySchedule: this.todaySchedule
+            };
+            localStorage.setItem('scheduleData', JSON.stringify(data));
+        },
+
+        async loadStats() {
+            try {
+                const response = await fetchAPI('/progress/stats');
+                if (response.success) {
+                    this.weekStreak = response.stats.current_streak || 0;
+                    const totalWords = response.stats.total_words || 0;
+
+                    // Determine level based on words learned
+                    if (totalWords >= 3000) this.currentLevel = 'C1';
+                    else if (totalWords >= 2000) this.currentLevel = 'B2';
+                    else if (totalWords >= 1000) this.currentLevel = 'B1';
+                    else if (totalWords >= 500) this.currentLevel = 'A2';
+                    else this.currentLevel = 'A1';
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+
+            // Calculate weekly progress
+            this.weeklyProgress = Math.round((this.todayCompleted / this.todayTotal) * 100);
+        },
+
+        async loadDailyGoals() {
+            this.dailyGoals = [
+                { name: 'Từ vựng mới', current: 0, target: 10, color: 'bg-blue-500' },
+                { name: 'Flashcard review', current: 0, target: 20, color: 'bg-yellow-500' },
+                { name: 'Quiz hoàn thành', current: 0, target: 2, color: 'bg-green-500' },
+                { name: 'SRS Review', current: 0, target: 15, color: 'bg-orange-500' },
+                { name: 'Phút thực hành', current: 0, target: 30, color: 'bg-purple-500' }
+            ];
+
+            try {
+                // Load actual progress from API
+                const statsResp = await fetchAPI('/progress/stats');
+                if (statsResp.success) {
+                    const today = new Date().toISOString().split('T')[0];
+                    // Update with real data if available
+                    this.dailyGoals[0].current = Math.min(10, statsResp.stats.total_words || 0) % 10 || 0;
+                }
+            } catch (e) {
+                console.error('Error loading goals:', e);
+            }
+        },
+
+        generateTodaySchedule() {
+            const dayOfWeek = new Date().getDay();
+            const schedules = {
+                0: [ // Sunday - Light review day
+                    { title: 'SRS Review nhẹ nhàng', time: '09:00', duration: '15 phút', icon: 'fas fa-redo', page: 'srs', description: 'Ôn tập từ đến hạn với SRS', completed: false },
+                    { title: 'Flashcards Review', time: '10:00', duration: '10 phút', icon: 'fas fa-clone', page: 'flashcards', description: 'Lật thẻ ôn từ vựng tuần qua', completed: false },
+                    { title: 'Xem Analytics tuần', time: '11:00', duration: '5 phút', icon: 'fas fa-chart-line', page: 'analytics', description: 'Đánh giá tiến độ học tập', completed: false }
+                ],
+                1: [ // Monday - Vocabulary focus
+                    { title: 'Học từ vựng mới', time: '07:00', duration: '20 phút', icon: 'fas fa-book', page: 'vocabulary', description: 'Thêm 10 từ mới vào danh sách', completed: false },
+                    { title: 'Flashcards Practice', time: '12:00', duration: '15 phút', icon: 'fas fa-clone', page: 'flashcards', description: 'Luyện nhớ từ bằng flashcard', completed: false },
+                    { title: 'Quiz kiểm tra', time: '18:00', duration: '10 phút', icon: 'fas fa-question-circle', page: 'quiz', description: 'Làm quiz từ vựng đã học', completed: false },
+                    { title: 'SRS Review', time: '20:00', duration: '10 phút', icon: 'fas fa-redo', page: 'srs', description: 'Hoàn thành review SRS', completed: false },
+                    { title: 'Translation Practice', time: '21:00', duration: '15 phút', icon: 'fas fa-language', page: 'translation', description: 'Luyện dịch câu Anh-Việt', completed: false }
+                ],
+                2: [ // Tuesday - Practice focus
+                    { title: 'SRS Morning Review', time: '07:00', duration: '10 phút', icon: 'fas fa-redo', page: 'srs', description: 'Ôn tập từ đến hạn buổi sáng', completed: false },
+                    { title: 'Conversation Practice', time: '12:00', duration: '20 phút', icon: 'fas fa-comments', page: 'conversation', description: 'Thực hành hội thoại với AI', completed: false },
+                    { title: 'Học từ vựng mới', time: '18:00', duration: '15 phút', icon: 'fas fa-book', page: 'vocabulary', description: 'Thêm 5-7 từ mới', completed: false },
+                    { title: 'Flashcards Review', time: '20:00', duration: '10 phút', icon: 'fas fa-clone', page: 'flashcards', description: 'Ôn lại từ đã học', completed: false },
+                    { title: 'Quiz tổng hợp', time: '21:00', duration: '10 phút', icon: 'fas fa-question-circle', page: 'quiz', description: 'Kiểm tra kiến thức', completed: false }
+                ],
+                3: [ // Wednesday - Mixed
+                    { title: 'Học từ vựng mới', time: '07:00', duration: '20 phút', icon: 'fas fa-book', page: 'vocabulary', description: 'Thêm 10 từ theo chủ đề', completed: false },
+                    { title: 'SRS Review', time: '12:00', duration: '15 phút', icon: 'fas fa-redo', page: 'srs', description: 'Review từ đến hạn', completed: false },
+                    { title: 'Translation Practice', time: '18:00', duration: '20 phút', icon: 'fas fa-language', page: 'translation', description: 'Luyện dịch nâng cao', completed: false },
+                    { title: 'Flashcards', time: '20:00', duration: '10 phút', icon: 'fas fa-clone', page: 'flashcards', description: 'Flashcard từ mới', completed: false },
+                    { title: 'Quiz cuối ngày', time: '21:00', duration: '10 phút', icon: 'fas fa-question-circle', page: 'quiz', description: 'Quiz tổng hợp', completed: false }
+                ],
+                4: [ // Thursday - Conversation focus
+                    { title: 'SRS Morning', time: '07:00', duration: '10 phút', icon: 'fas fa-redo', page: 'srs', description: 'Review buổi sáng', completed: false },
+                    { title: 'Conversation Practice', time: '12:00', duration: '25 phút', icon: 'fas fa-comments', page: 'conversation', description: 'Hội thoại chuyên sâu', completed: false },
+                    { title: 'Học từ vựng', time: '18:00', duration: '15 phút', icon: 'fas fa-book', page: 'vocabulary', description: 'Từ vựng giao tiếp', completed: false },
+                    { title: 'Flashcards', time: '20:00', duration: '15 phút', icon: 'fas fa-clone', page: 'flashcards', description: 'Ôn từ flashcard', completed: false },
+                    { title: 'Quiz nhanh', time: '21:00', duration: '10 phút', icon: 'fas fa-question-circle', page: 'quiz', description: 'Quiz 10 câu', completed: false }
+                ],
+                5: [ // Friday - Review & Test
+                    { title: 'Học từ mới', time: '07:00', duration: '15 phút', icon: 'fas fa-book', page: 'vocabulary', description: 'Từ vựng cuối tuần', completed: false },
+                    { title: 'SRS Complete', time: '12:00', duration: '20 phút', icon: 'fas fa-redo', page: 'srs', description: 'Hoàn thành tất cả SRS', completed: false },
+                    { title: 'Quiz tổng tuần', time: '18:00', duration: '15 phút', icon: 'fas fa-question-circle', page: 'quiz', description: 'Quiz ôn tập cả tuần', completed: false },
+                    { title: 'Translation', time: '20:00', duration: '15 phút', icon: 'fas fa-language', page: 'translation', description: 'Luyện dịch', completed: false },
+                    { title: 'Analytics Review', time: '21:00', duration: '5 phút', icon: 'fas fa-chart-line', page: 'analytics', description: 'Xem tiến độ tuần', completed: false }
+                ],
+                6: [ // Saturday - Intensive practice
+                    { title: 'Vocabulary Sprint', time: '09:00', duration: '25 phút', icon: 'fas fa-book', page: 'vocabulary', description: 'Học 15-20 từ mới', completed: false },
+                    { title: 'Flashcards Marathon', time: '10:00', duration: '20 phút', icon: 'fas fa-clone', page: 'flashcards', description: 'Review 30+ flashcards', completed: false },
+                    { title: 'Conversation Long', time: '14:00', duration: '30 phút', icon: 'fas fa-comments', page: 'conversation', description: 'Hội thoại dài', completed: false },
+                    { title: 'Quiz Challenge', time: '16:00', duration: '15 phút', icon: 'fas fa-question-circle', page: 'quiz', description: 'Quiz 20 câu thử thách', completed: false },
+                    { title: 'SRS Catch-up', time: '18:00', duration: '15 phút', icon: 'fas fa-redo', page: 'srs', description: 'Hoàn thành SRS còn lại', completed: false }
+                ]
+            };
+
+            // Load saved schedule or use default
+            const saved = localStorage.getItem('scheduleData');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (data.date === new Date().toDateString() && data.todaySchedule) {
+                    this.todaySchedule = data.todaySchedule;
+                    this.todayCompleted = this.todaySchedule.filter(s => s.completed).length;
+                    this.todayTotal = this.todaySchedule.length;
+                    return;
+                }
+            }
+
+            this.todaySchedule = schedules[dayOfWeek] || schedules[1];
+            this.todayTotal = this.todaySchedule.length;
+        },
+
+        generateWeekPlan() {
+            const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+            const fullDays = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+            const today = new Date();
+
+            const taskTemplates = {
+                0: [
+                    { short: 'Review', type: 'review' },
+                    { short: 'Flashcard', type: 'review' },
+                    { short: 'Analytics', type: 'practice' }
+                ],
+                1: [
+                    { short: 'Vocabulary', type: 'vocabulary' },
+                    { short: 'Quiz', type: 'quiz' },
+                    { short: 'Translation', type: 'practice' }
+                ],
+                2: [
+                    { short: 'Conversation', type: 'practice' },
+                    { short: 'SRS Review', type: 'review' },
+                    { short: 'Quiz', type: 'quiz' }
+                ],
+                3: [
+                    { short: 'Vocabulary', type: 'vocabulary' },
+                    { short: 'Translation', type: 'practice' },
+                    { short: 'Flashcard', type: 'review' }
+                ],
+                4: [
+                    { short: 'Conversation', type: 'practice' },
+                    { short: 'Vocabulary', type: 'vocabulary' },
+                    { short: 'Quiz', type: 'quiz' }
+                ],
+                5: [
+                    { short: 'SRS Full', type: 'review' },
+                    { short: 'Quiz Tuần', type: 'quiz' },
+                    { short: 'Analytics', type: 'practice' }
+                ],
+                6: [
+                    { short: 'Vocab Sprint', type: 'vocabulary' },
+                    { short: 'Conversation', type: 'practice' },
+                    { short: 'Challenge', type: 'quiz' }
+                ]
+            };
+
+            this.weekPlan = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - today.getDay() + i);
+
+                this.weekPlan.push({
+                    name: days[i],
+                    fullName: fullDays[i],
+                    date: date.getDate() + '/' + (date.getMonth() + 1),
+                    tasks: taskTemplates[i]
+                });
+            }
+        },
+
+        getCurrentDay() {
+            const days = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+            return days[new Date().getDay()];
+        },
+
+        markCompleted(idx) {
+            this.todaySchedule[idx].completed = true;
+            this.todayCompleted = this.todaySchedule.filter(s => s.completed).length;
+            this.weeklyProgress = Math.round((this.todayCompleted / this.todayTotal) * 100);
+            this.saveToStorage();
+        },
+
+        goToActivity(page) {
+            window.dispatchEvent(new CustomEvent('navigate', { detail: page }));
+        },
+
+        showDayDetail(idx) {
+            // Could show a modal with detailed schedule for that day
+            console.log('Show detail for day:', this.weekPlan[idx]);
         }
     }));
 });
