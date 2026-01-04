@@ -667,6 +667,90 @@
                             </div>
                         </div>
 
+                        <!-- Translation Practice Section -->
+                        <div class="mt-6 bg-white rounded-xl shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">
+                                <i class="fas fa-pen-fancy mr-2 text-accent"></i>
+                                Translation Practice (Luyện dịch)
+                            </h3>
+                            <p class="text-sm text-gray-500 mb-4">
+                                Tạo prompt để luyện dịch đoạn văn với AI (ChatGPT, Claude, v.v.)
+                            </p>
+
+                            <!-- Practice Options -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Topic (Chủ đề) <span class="text-red-500">*</span></label>
+                                    <select x-model="practiceTopic" class="w-full border rounded-lg px-3 py-2">
+                                        <option value="">-- Chọn chủ đề --</option>
+                                        <option value="Daily Life">Daily Life (Cuộc sống hàng ngày)</option>
+                                        <option value="Travel">Travel (Du lịch)</option>
+                                        <option value="Work & Business">Work & Business (Công việc)</option>
+                                        <option value="Technology">Technology (Công nghệ)</option>
+                                        <option value="Health">Health (Sức khỏe)</option>
+                                        <option value="Education">Education (Giáo dục)</option>
+                                        <option value="Environment">Environment (Môi trường)</option>
+                                        <option value="Culture">Culture (Văn hóa)</option>
+                                        <option value="Food">Food (Ẩm thực)</option>
+                                        <option value="Sports">Sports (Thể thao)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Level (Độ khó) <span class="text-red-500">*</span></label>
+                                    <select x-model="practiceLevel" class="w-full border rounded-lg px-3 py-2">
+                                        <option value="">-- Chọn độ khó --</option>
+                                        <option value="A1">A1 - Beginner (Cơ bản)</option>
+                                        <option value="A2">A2 - Elementary (Sơ cấp)</option>
+                                        <option value="B1">B1 - Intermediate (Trung cấp)</option>
+                                        <option value="B2">B2 - Upper Intermediate (Trung cấp cao)</option>
+                                        <option value="C1">C1 - Advanced (Nâng cao)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Length (Độ dài) <span class="text-red-500">*</span></label>
+                                    <select x-model="practiceLength" class="w-full border rounded-lg px-3 py-2">
+                                        <option value="">-- Chọn độ dài --</option>
+                                        <option value="short">Short - 3-5 sentences (Ngắn)</option>
+                                        <option value="medium">Medium - 6-10 sentences (Trung bình)</option>
+                                        <option value="long">Long - 11-15 sentences (Dài)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Direction (Hướng dịch) <span class="text-red-500">*</span></label>
+                                    <select x-model="practiceDirection" class="w-full border rounded-lg px-3 py-2">
+                                        <option value="">-- Chọn hướng dịch --</option>
+                                        <option value="vi_to_en">Vietnamese → English</option>
+                                        <option value="en_to_vi">English → Vietnamese</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button @click="generatePracticePrompt"
+                                    :disabled="!practiceTopic || !practiceLevel || !practiceLength || !practiceDirection"
+                                    class="px-6 py-3 bg-accent text-white rounded-lg hover:bg-purple-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
+                                <i class="fas fa-magic mr-2"></i>Generate Prompt
+                            </button>
+                        </div>
+
+                        <!-- Practice Prompt Display -->
+                        <div x-show="practicePrompt" class="mt-6 bg-white rounded-xl shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold">
+                                    <i class="fas fa-clipboard mr-2"></i>
+                                    Prompt for Translation Practice
+                                </h3>
+                                <button @click="copyPracticePrompt" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">
+                                    <i class="fas fa-copy mr-1"></i>Copy Prompt
+                                </button>
+                            </div>
+                            <textarea readonly
+                                      x-model="practicePrompt"
+                                      class="w-full h-64 p-4 border rounded-lg bg-gray-50 text-sm font-mono resize-none"></textarea>
+                            <p class="text-sm text-gray-500 mt-2">
+                                <i class="fas fa-arrow-right mr-1"></i>Copy prompt này và paste vào ChatGPT, Claude hoặc AI khác để bắt đầu luyện dịch
+                            </p>
+                        </div>
+
                         <!-- Translation History -->
                         <div class="mt-6 bg-white rounded-xl shadow p-6">
                             <h3 class="text-lg font-semibold mb-4">Recent Translations</h3>

@@ -759,6 +759,12 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
         adjustLevel: '',
         loading: false,
         history: [],
+        // Translation Practice
+        practiceTopic: '',
+        practiceLevel: '',
+        practiceLength: '',
+        practiceDirection: '',
+        practicePrompt: '',
 
         async init() {
             await this.loadHistory();
@@ -822,6 +828,70 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
             this.translatedText = item.translated_text;
             this.sourceLang = item.source_lang;
             this.targetLang = item.target_lang;
+        },
+
+        generatePracticePrompt() {
+            const lengthMap = {
+                'short': '3-5 sentences',
+                'medium': '6-10 sentences',
+                'long': '11-15 sentences'
+            };
+
+            const levelDescMap = {
+                'A1': 'very simple vocabulary and basic grammar (present tense, simple sentences)',
+                'A2': 'elementary vocabulary and simple grammar structures',
+                'B1': 'intermediate vocabulary and common grammar patterns',
+                'B2': 'upper-intermediate vocabulary with complex sentences',
+                'C1': 'advanced vocabulary, idioms, and sophisticated grammar'
+            };
+
+            const sourceLang = this.practiceDirection === 'vi_to_en' ? 'Vietnamese' : 'English';
+            const targetLang = this.practiceDirection === 'vi_to_en' ? 'English' : 'Vietnamese';
+            const length = lengthMap[this.practiceLength];
+            const levelDesc = levelDescMap[this.practiceLevel];
+
+            this.practicePrompt = `You are a language tutor helping me practice ${sourceLang} to ${targetLang} translation.
+
+TASK: Create a translation practice exercise following these requirements:
+
+1. PASSAGE GENERATION:
+   - Topic: ${this.practiceTopic}
+   - Level: ${this.practiceLevel} (${levelDesc})
+   - Length: ${length}
+   - Language: Write the passage in ${sourceLang}
+
+2. PRACTICE FORMAT:
+   After generating the passage, present it sentence by sentence for me to translate.
+
+   For each sentence:
+   - Show the original sentence in ${sourceLang}
+   - Wait for my translation to ${targetLang}
+   - After I respond, grade my translation (score out of 10)
+   - Point out any errors and explain corrections
+   - Provide a model translation for comparison
+   - Then move to the next sentence
+
+3. FINAL REVIEW:
+   After I complete all sentences:
+   - Give an overall score and feedback
+   - List common mistakes I made
+   - Provide a "Vocabulary to Remember" section with:
+     * New/difficult words from the passage
+     * Their meanings in both languages
+     * Example sentences
+
+START by generating the ${sourceLang} passage about "${this.practiceTopic}" and present the FIRST sentence for me to translate.
+
+Format:
+📝 Sentence 1/${length.split('-')[1].replace(' sentences', '')}:
+[First sentence in ${sourceLang}]
+
+Your translation:`;
+        },
+
+        copyPracticePrompt() {
+            navigator.clipboard.writeText(this.practicePrompt);
+            Alpine.store('app')?.showToast?.('Prompt copied to clipboard!', 'success');
         }
     }));
 
