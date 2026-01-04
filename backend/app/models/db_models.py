@@ -507,6 +507,58 @@ class ExerciseAttempt(Base):
     exercise = relationship("Exercise", back_populates="attempts")
 
 
+class TranslationPractice(Base):
+    """Translation practice history."""
+    __tablename__ = "translation_practices"
+
+    id = Column(Integer, primary_key=True, index=True)
+    topic = Column(String(100), nullable=False)
+    level = Column(String(10), nullable=False)
+    direction = Column(String(20), nullable=False)  # vi_to_en, en_to_vi
+    length = Column(String(20))  # short, medium, long
+    complexity = Column(String(50))
+    score = Column(Float, nullable=False)
+    practiced_at = Column(DateTime, default=func.now(), index=True)
+
+    def to_dict(self):
+        """Convert to dictionary."""
+        return {
+            "id": self.id,
+            "topic": self.topic,
+            "level": self.level,
+            "direction": self.direction,
+            "length": self.length,
+            "complexity": self.complexity,
+            "score": self.score,
+            "date": self.practiced_at.isoformat() if self.practiced_at else None
+        }
+
+
+class ConversationPractice(Base):
+    """Conversation practice history."""
+    __tablename__ = "conversation_practices"
+
+    id = Column(Integer, primary_key=True, index=True)
+    topic = Column(String(100), nullable=False)
+    level = Column(String(10), nullable=False)
+    style = Column(String(50), nullable=False)  # casual, formal, roleplay, debate, interview
+    length = Column(String(20))  # short, medium, long
+    score = Column(Float, nullable=False)
+    practiced_at = Column(DateTime, default=func.now(), index=True)
+
+    def to_dict(self):
+        """Convert to dictionary."""
+        return {
+            "id": self.id,
+            "topic": self.topic,
+            "level": self.level,
+            "style": self.style,
+            "length": self.length,
+            "score": self.score,
+            "date": self.practiced_at.isoformat() if self.practiced_at else None
+        }
+
+
 class StudySession(Base):
     """Daily study session tracking."""
     __tablename__ = "study_sessions"

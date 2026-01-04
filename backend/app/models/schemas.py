@@ -111,6 +111,7 @@ class QuizGenerateRequest(BaseModel):
     topic_id: Optional[int] = None
     level: Optional[str] = Field(None, pattern="^(A1|A2|B1|B2|C1|C2)$")
     num_questions: int = Field(default=10, ge=5, le=30)
+    vocabulary_ids: Optional[List[int]] = None  # For flashcard-based quiz
 
 
 class QuizGenerateResponse(BaseResponse):

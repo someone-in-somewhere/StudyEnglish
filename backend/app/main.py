@@ -30,6 +30,10 @@ from app.routers import (
     errors_router,
     learning_paths_router,
     topics_router,
+    practice_router,
+    recommendations_router,
+    export_import_router,
+    analytics_router,
 )
 
 # Configure logging
@@ -101,6 +105,10 @@ app.include_router(writing_router)
 app.include_router(flashcards_router)
 app.include_router(errors_router)
 app.include_router(learning_paths_router)
+app.include_router(practice_router)
+app.include_router(recommendations_router)
+app.include_router(export_import_router)
+app.include_router(analytics_router)
 
 
 # API Health check

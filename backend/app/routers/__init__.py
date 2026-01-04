@@ -13,6 +13,10 @@ from app.routers.flashcards import router as flashcards_router
 from app.routers.errors import router as errors_router
 from app.routers.learning_paths import router as learning_paths_router
 from app.routers.topics import router as topics_router
+from app.routers.practice import router as practice_router
+from app.routers.recommendations import router as recommendations_router
+from app.routers.export_import import router as export_import_router
+from app.routers.analytics import router as analytics_router
 
 __all__ = [
     "vocabulary_router",
@@ -28,4 +32,8 @@ __all__ = [
     "errors_router",
     "learning_paths_router",
     "topics_router",
+    "practice_router",
+    "recommendations_router",
+    "export_import_router",
+    "analytics_router",
 ]

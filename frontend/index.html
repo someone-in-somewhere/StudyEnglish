@@ -84,6 +84,81 @@
                 transform: translateY(0);
             }
         }
+
+        /* Swipe animation for flashcards */
+        .swipe-left {
+            animation: swipeLeft 0.3s ease-out forwards;
+        }
+
+        .swipe-right {
+            animation: swipeRight 0.3s ease-out forwards;
+        }
+
+        @keyframes swipeLeft {
+            to {
+                transform: translateX(-100%) rotate(-10deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes swipeRight {
+            to {
+                transform: translateX(100%) rotate(10deg);
+                opacity: 0;
+            }
+        }
+
+        /* Bottom Navigation for Mobile */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            z-index: 50;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            color: #6b7280;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .bottom-nav-item.active {
+            color: #3B82F6;
+        }
+
+        .bottom-nav-item i {
+            font-size: 1.25rem;
+            margin-bottom: 4px;
+        }
+
+        .bottom-nav-item span {
+            font-size: 0.625rem;
+            font-weight: 500;
+        }
+
+        /* Add padding for bottom nav on mobile */
+        @media (max-width: 1023px) {
+            main {
+                padding-bottom: 80px !important;
+            }
+        }
+
+        /* Touch feedback */
+        .touch-highlight:active {
+            transform: scale(0.95);
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen" x-data="app">
@@ -379,6 +454,43 @@
                                         </tr>
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+
+                        <!-- Smart Recommendations -->
+                        <div class="bg-white rounded-xl shadow p-6 mb-6">
+                            <h3 class="text-lg font-semibold mb-4">
+                                <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>
+                                Smart Recommendations
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <template x-for="(rec, index) in recommendations" :key="index">
+                                    <div class="p-4 rounded-lg border-l-4 cursor-pointer hover:shadow-md transition-shadow"
+                                         :class="{
+                                             'bg-red-50 border-red-500': rec.color === 'red',
+                                             'bg-orange-50 border-orange-500': rec.color === 'orange',
+                                             'bg-blue-50 border-blue-500': rec.color === 'blue',
+                                             'bg-purple-50 border-purple-500': rec.color === 'purple',
+                                             'bg-indigo-50 border-indigo-500': rec.color === 'indigo',
+                                             'bg-green-50 border-green-500': rec.color === 'green',
+                                             'bg-teal-50 border-teal-500': rec.color === 'teal',
+                                             'bg-yellow-50 border-yellow-500': rec.color === 'yellow'
+                                         }"
+                                         @click="goToRecommendation(rec)">
+                                        <div class="flex items-start">
+                                            <i :class="rec.icon + ' text-lg mr-3 mt-1'"
+                                               :style="'color: var(--tw-border-opacity)'"></i>
+                                            <div>
+                                                <h4 class="font-medium text-gray-800" x-text="rec.title"></h4>
+                                                <p class="text-sm text-gray-600 mt-1" x-text="rec.description"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <div x-show="recommendations.length === 0" class="col-span-full text-center py-8 text-gray-400">
+                                    <i class="fas fa-check-circle text-4xl mb-2 text-green-400"></i>
+                                    <p>Great job! No recommendations at this time.</p>
+                                </div>
                             </div>
                         </div>
 
@@ -1268,6 +1380,278 @@
                 </template>
             </div>
 
+            <!-- Export/Import Page -->
+            <div x-show="currentPage === 'export'" x-cloak class="slide-enter">
+                <template x-if="currentPage === 'export'">
+                    <div x-data="exportPage" x-init="init()">
+                        <!-- Export Section -->
+                        <div class="bg-white rounded-xl shadow p-6 mb-6">
+                            <h3 class="text-lg font-semibold mb-4">
+                                <i class="fas fa-download mr-2 text-primary"></i>
+                                Export Vocabulary
+                            </h3>
+                            <p class="text-sm text-gray-500 mb-4">
+                                Export your learned vocabulary to different formats for backup or use in other apps.
+                            </p>
+
+                            <!-- Export Stats -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                <div class="p-4 bg-blue-50 rounded-lg text-center">
+                                    <p class="text-2xl font-bold text-primary" x-text="exportStats.total_vocabulary"></p>
+                                    <p class="text-xs text-gray-600">Total Words</p>
+                                </div>
+                                <div class="p-4 bg-green-50 rounded-lg text-center">
+                                    <p class="text-2xl font-bold text-green-600" x-text="exportStats.learned_vocabulary"></p>
+                                    <p class="text-xs text-gray-600">Learned</p>
+                                </div>
+                                <div class="p-4 bg-purple-50 rounded-lg text-center">
+                                    <p class="text-2xl font-bold text-purple-600" x-text="Object.keys(exportStats.by_topic || {}).length"></p>
+                                    <p class="text-xs text-gray-600">Topics</p>
+                                </div>
+                                <div class="p-4 bg-orange-50 rounded-lg text-center">
+                                    <p class="text-2xl font-bold text-orange-600" x-text="Object.keys(exportStats.by_level || {}).length"></p>
+                                    <p class="text-xs text-gray-600">Levels</p>
+                                </div>
+                            </div>
+
+                            <!-- Export Options -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" x-model="exportLearnedOnly" class="mr-2">
+                                        <span class="text-sm">Only export learned words</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Export Buttons -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button @click="exportData('json')"
+                                        class="flex items-center justify-center p-4 border-2 border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
+                                    <i class="fas fa-file-code text-2xl mr-3"></i>
+                                    <div class="text-left">
+                                        <p class="font-semibold">JSON</p>
+                                        <p class="text-xs text-gray-500">Full data backup</p>
+                                    </div>
+                                </button>
+                                <button @click="exportData('csv')"
+                                        class="flex items-center justify-center p-4 border-2 border-green-500 text-green-600 rounded-lg hover:bg-green-50 transition-colors">
+                                    <i class="fas fa-file-csv text-2xl mr-3"></i>
+                                    <div class="text-left">
+                                        <p class="font-semibold">CSV</p>
+                                        <p class="text-xs text-gray-500">Excel compatible</p>
+                                    </div>
+                                </button>
+                                <button @click="exportData('anki')"
+                                        class="flex items-center justify-center p-4 border-2 border-purple-500 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors">
+                                    <i class="fas fa-clone text-2xl mr-3"></i>
+                                    <div class="text-left">
+                                        <p class="font-semibold">Anki</p>
+                                        <p class="text-xs text-gray-500">Flashcard app</p>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Import Section -->
+                        <div class="bg-white rounded-xl shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">
+                                <i class="fas fa-upload mr-2 text-secondary"></i>
+                                Import Vocabulary
+                            </h3>
+                            <p class="text-sm text-gray-500 mb-4">
+                                Import vocabulary from JSON or CSV files. Duplicate words will be skipped.
+                            </p>
+
+                            <!-- File Upload -->
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors"
+                                 @dragover.prevent="dragOver = true"
+                                 @dragleave.prevent="dragOver = false"
+                                 @drop.prevent="handleDrop($event)"
+                                 :class="{ 'border-primary bg-blue-50': dragOver }">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                                <p class="text-gray-600 mb-2">Drag & drop file here or</p>
+                                <label class="cursor-pointer">
+                                    <span class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
+                                        Choose File
+                                    </span>
+                                    <input type="file" accept=".json,.csv" class="hidden" @change="handleFileSelect($event)">
+                                </label>
+                                <p class="text-xs text-gray-400 mt-2">Supported: JSON, CSV</p>
+                            </div>
+
+                            <!-- Import Result -->
+                            <div x-show="importResult" class="mt-4 p-4 rounded-lg"
+                                 :class="importResult?.success ? 'bg-green-50' : 'bg-red-50'">
+                                <div class="flex items-center">
+                                    <i :class="importResult?.success ? 'fas fa-check-circle text-green-600' : 'fas fa-times-circle text-red-600'" class="text-xl mr-3"></i>
+                                    <div>
+                                        <p class="font-medium" x-text="importResult?.message"></p>
+                                        <p x-show="importResult?.added" class="text-sm text-gray-600">
+                                            Added: <span x-text="importResult?.added"></span> | Duplicates: <span x-text="importResult?.duplicates"></span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Loading -->
+                            <div x-show="importing" class="mt-4 flex items-center justify-center py-4">
+                                <div class="loading-spinner mr-3"></div>
+                                <span>Importing...</span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Analytics Page -->
+            <div x-show="currentPage === 'analytics'" x-cloak class="slide-enter">
+                <template x-if="currentPage === 'analytics'">
+                    <div x-data="analyticsPage" x-init="init()">
+                        <!-- Summary Stats -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white rounded-xl shadow p-4">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                        <i class="fas fa-book text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold" x-text="summary.total_words_learned"></p>
+                                        <p class="text-xs text-gray-500">Words Learned</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-4">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                        <i class="fas fa-fire text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold" x-text="streak.current_streak"></p>
+                                        <p class="text-xs text-gray-500">Day Streak</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-4">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                                        <i class="fas fa-calendar-check text-purple-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold" x-text="streak.total_active_days"></p>
+                                        <p class="text-xs text-gray-500">Active Days</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-4">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mr-3">
+                                        <i class="fas fa-trophy text-orange-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold" x-text="streak.longest_streak"></p>
+                                        <p class="text-xs text-gray-500">Best Streak</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Heatmap -->
+                        <div class="bg-white rounded-xl shadow p-6 mb-6">
+                            <h3 class="text-lg font-semibold mb-4">
+                                <i class="fas fa-calendar mr-2 text-green-600"></i>
+                                Activity Heatmap
+                            </h3>
+                            <p class="text-sm text-gray-500 mb-4">Your learning activity over the past year</p>
+
+                            <!-- Heatmap Grid -->
+                            <div class="overflow-x-auto">
+                                <div class="heatmap-container" style="display: flex; gap: 2px; min-width: 700px;">
+                                    <template x-for="(week, weekIndex) in heatmapWeeks" :key="weekIndex">
+                                        <div class="flex flex-col gap-1">
+                                            <template x-for="(day, dayIndex) in week" :key="dayIndex">
+                                                <div class="w-3 h-3 rounded-sm cursor-pointer transition-transform hover:scale-125"
+                                                     :style="'background-color: ' + getHeatmapColor(day.count)"
+                                                     :title="day.date + ': ' + day.count + ' activities'"
+                                                     x-show="day.date"></div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Legend -->
+                            <div class="flex items-center justify-end mt-4 gap-1 text-xs text-gray-500">
+                                <span>Less</span>
+                                <div class="w-3 h-3 rounded-sm" style="background-color: #ebedf0"></div>
+                                <div class="w-3 h-3 rounded-sm" style="background-color: #9be9a8"></div>
+                                <div class="w-3 h-3 rounded-sm" style="background-color: #40c463"></div>
+                                <div class="w-3 h-3 rounded-sm" style="background-color: #30a14e"></div>
+                                <div class="w-3 h-3 rounded-sm" style="background-color: #216e39"></div>
+                                <span>More</span>
+                            </div>
+                        </div>
+
+                        <!-- Weekly Progress Chart -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <h3 class="text-lg font-semibold mb-4">
+                                    <i class="fas fa-chart-bar mr-2 text-primary"></i>
+                                    Weekly Progress
+                                </h3>
+                                <canvas id="weeklyChart" height="250"></canvas>
+                            </div>
+
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <h3 class="text-lg font-semibold mb-4">
+                                    <i class="fas fa-chart-line mr-2 text-secondary"></i>
+                                    Score Trends
+                                </h3>
+                                <canvas id="scoreChart" height="250"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Monthly Summary -->
+                        <div class="bg-white rounded-xl shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">
+                                <i class="fas fa-calendar-alt mr-2 text-purple-600"></i>
+                                Monthly Summary
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="text-left text-gray-500 border-b">
+                                            <th class="pb-3">Month</th>
+                                            <th class="pb-3 text-center">Words</th>
+                                            <th class="pb-3 text-center">Quizzes</th>
+                                            <th class="pb-3 text-center">Avg Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template x-for="month in monthlyStats" :key="month.month">
+                                            <tr class="border-b border-gray-100">
+                                                <td class="py-3 font-medium" x-text="month.month_name"></td>
+                                                <td class="py-3 text-center">
+                                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded" x-text="month.words_learned"></span>
+                                                </td>
+                                                <td class="py-3 text-center">
+                                                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded" x-text="month.quizzes"></span>
+                                                </td>
+                                                <td class="py-3 text-center">
+                                                    <span class="px-2 py-1 rounded"
+                                                          :class="month.quiz_avg >= 80 ? 'bg-green-100 text-green-700' : month.quiz_avg >= 60 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'"
+                                                          x-text="month.quiz_avg + '%'"></span>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
             <!-- Flashcards Page -->
             <div x-show="currentPage === 'flashcards'" x-cloak class="slide-enter">
                 <template x-if="currentPage === 'flashcards'">
@@ -1316,8 +1700,9 @@
                             </div>
 
                             <!-- Flashcard -->
-                            <div class="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer select-none"
+                            <div class="flashcard-swipe bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer select-none transition-transform"
                                  @click="flipCard"
+                                 :class="{ 'swipe-left': swipeDirection === 'left', 'swipe-right': swipeDirection === 'right' }"
                                  style="min-height: 350px;">
                                 <div class="p-8 text-center" x-show="!isFlipped">
                                     <p class="text-sm text-gray-400 mb-4">Click to reveal meaning</p>
@@ -1344,14 +1729,19 @@
                                 </div>
                             </div>
 
+                            <!-- Swipe hint for mobile -->
+                            <p class="text-center text-sm text-gray-400 mt-4 lg:hidden">
+                                <i class="fas fa-hand-point-left mr-1"></i> Swipe left = Don't Know | Swipe right = Know <i class="fas fa-hand-point-right ml-1"></i>
+                            </p>
+
                             <!-- Actions -->
                             <div class="mt-6 flex justify-center gap-4">
                                 <button @click="markCard(false)"
-                                        class="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                                        class="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors touch-highlight">
                                     <i class="fas fa-times mr-2"></i>Don't Know
                                 </button>
                                 <button @click="markCard(true)"
-                                        class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                                        class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors touch-highlight">
                                     <i class="fas fa-check mr-2"></i>Know
                                 </button>
                             </div>
@@ -1376,6 +1766,19 @@
                                     <p class="text-sm text-gray-500">Need Review</p>
                                 </div>
                             </div>
+
+                            <!-- Quiz Suggestion -->
+                            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+                                <div class="flex items-center justify-center mb-2">
+                                    <i class="fas fa-lightbulb text-purple-500 mr-2"></i>
+                                    <span class="font-medium text-purple-700">Ready for a challenge?</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Test your knowledge with a quiz using the words you just studied!</p>
+                                <button @click="goToQuizWithStudiedWords" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+                                    <i class="fas fa-question-circle mr-2"></i>Take Quiz Now
+                                </button>
+                            </div>
+
                             <button @click="resetStudy" class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-600">
                                 <i class="fas fa-redo mr-2"></i>Study Again
                             </button>
@@ -1386,8 +1789,32 @@
         </div>
     </main>
 
+    <!-- Bottom Navigation (Mobile) -->
+    <nav class="bottom-nav lg:hidden" x-show="true">
+        <a href="#" class="bottom-nav-item touch-highlight" :class="{ 'active': currentPage === 'dashboard' }" @click.prevent="navigateTo('dashboard')">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="#" class="bottom-nav-item touch-highlight" :class="{ 'active': currentPage === 'vocabulary' }" @click.prevent="navigateTo('vocabulary')">
+            <i class="fas fa-book"></i>
+            <span>Learn</span>
+        </a>
+        <a href="#" class="bottom-nav-item touch-highlight" :class="{ 'active': currentPage === 'quiz' }" @click.prevent="navigateTo('quiz')">
+            <i class="fas fa-question-circle"></i>
+            <span>Quiz</span>
+        </a>
+        <a href="#" class="bottom-nav-item touch-highlight" :class="{ 'active': currentPage === 'flashcards' }" @click.prevent="navigateTo('flashcards')">
+            <i class="fas fa-clone"></i>
+            <span>Cards</span>
+        </a>
+        <a href="#" class="bottom-nav-item touch-highlight" :class="{ 'active': currentPage === 'srs' }" @click.prevent="navigateTo('srs')">
+            <i class="fas fa-redo"></i>
+            <span>Review</span>
+        </a>
+    </nav>
+
     <!-- Toast Notifications -->
-    <div class="fixed bottom-4 right-4 z-50 space-y-2">
+    <div class="fixed bottom-20 lg:bottom-4 right-4 z-50 space-y-2">
         <template x-for="toast in toasts" :key="toast.id">
             <div class="px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 slide-enter"
                  :class="toast.type === 'success' ? 'bg-green-500 text-white' : toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'">

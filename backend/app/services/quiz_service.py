@@ -32,7 +32,8 @@ class QuizService:
         topic: Optional[str] = None,
         topic_id: Optional[int] = None,
         level: Optional[str] = None,
-        use_learned_only: bool = True
+        use_learned_only: bool = True,
+        vocabulary_ids: Optional[List[int]] = None
     ) -> Dict[str, Any]:
         """
         Generate a quiz from vocabulary.
@@ -44,6 +45,7 @@ class QuizService:
             topic_id: Optional topic ID filter
             level: Optional CEFR level filter
             use_learned_only: Only use learned vocabulary
+            vocabulary_ids: Optional list of specific vocabulary IDs (from flashcards)
 
         Returns:
             Quiz data with questions
@@ -54,7 +56,8 @@ class QuizService:
             topic=topic,
             topic_id=topic_id,
             level=level,
-            use_learned_only=use_learned_only
+            use_learned_only=use_learned_only,
+            vocabulary_ids=vocabulary_ids
         )
 
         if len(vocabulary) < num_questions:
@@ -111,7 +114,8 @@ class QuizService:
         topic_id: Optional[int] = None,
         level: Optional[str] = None,
         use_learned_only: bool = True,
-        prioritize_weak: bool = True
+        prioritize_weak: bool = True,
+        vocabulary_ids: Optional[List[int]] = None
     ) -> List[Vocabulary]:
         """Get vocabulary for quiz generation.
 
@@ -120,6 +124,14 @@ class QuizService:
         - Lower mastery level
         - Fewer times in quiz (times_correct + times_incorrect)
         """
+        # If specific vocabulary IDs are provided (from flashcards), use them
+        if vocabulary_ids and len(vocabulary_ids) > 0:
+            vocabulary = self.db.query(Vocabulary).filter(
+                Vocabulary.id.in_(vocabulary_ids)
+            ).all()
+            random.shuffle(vocabulary)
+            return vocabulary
+
         if use_learned_only:
             query = self.db.query(Vocabulary, UserVocabulary).join(
                 UserVocabulary,

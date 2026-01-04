@@ -30,7 +30,8 @@ def generate_quiz(
         num_questions=request.num_questions,
         topic=request.topic,
         topic_id=request.topic_id,
-        level=request.level
+        level=request.level,
+        vocabulary_ids=request.vocabulary_ids
     )
 
     if not result.get("success", True):

@@ -70,6 +70,8 @@ document.addEventListener('alpine:init', () => {
                     { id: 'translation', name: 'Translation Practice', icon: 'fas fa-language' },
                     { id: 'conversation', name: 'Conversation Practice', icon: 'fas fa-comments' },
                     { id: 'flashcards', name: 'Flashcards', icon: 'fas fa-clone' },
+                    { id: 'export', name: 'Export/Import', icon: 'fas fa-file-export' },
+                    { id: 'analytics', name: 'Analytics', icon: 'fas fa-chart-line' },
                 ]
             }
         ],
@@ -126,6 +128,8 @@ document.addEventListener('alpine:init', () => {
                 'conversation': { title: 'Conversation Practice', desc: 'Practice English conversation with AI' },
                 'srs': { title: 'Spaced Repetition', desc: 'Review words for long-term memory' },
                 'flashcards': { title: 'Flashcards', desc: 'Study with flashcards' },
+                'export': { title: 'Export/Import', desc: 'Export and import vocabulary data' },
+                'analytics': { title: 'Analytics', desc: 'View your learning progress and statistics' },
             };
 
             const pageInfo = pageTitles[page] || { title: 'StudyEnglish', desc: '' };
@@ -176,14 +180,42 @@ document.addEventListener('alpine:init', () => {
             srsSuccessRate: 0
         },
         recentActivity: [],
+        recommendations: [],
         progressChart: null,
         topicsChart: null,
 
+        practiceChartData: [],
+
         async init() {
             await this.loadDashboardData();
-            this.loadPracticeStats();
-            this.loadRecentActivity();
+            await this.loadPracticeStats();
+            await this.loadRecentActivity();
+            await this.loadRecommendations();
             this.initCharts();
+        },
+
+        async loadRecommendations() {
+            try {
+                const response = await fetchAPI('/recommendations');
+                if (response.success) {
+                    this.recommendations = response.recommendations;
+                }
+            } catch (error) {
+                console.error('Failed to load recommendations:', error);
+            }
+        },
+
+        goToRecommendation(rec) {
+            const actionMap = {
+                'quiz': 'quiz',
+                'flashcards': 'flashcards',
+                'srs': 'srs',
+                'translation': 'translation',
+                'conversation': 'conversation',
+                'vocabulary': 'vocabulary'
+            };
+            const page = actionMap[rec.action] || 'dashboard';
+            window.dispatchEvent(new CustomEvent('navigate', { detail: page }));
         },
 
         async loadDashboardData() {
@@ -211,28 +243,22 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        loadPracticeStats() {
-            // Load Translation Practice stats
-            const translationHistory = JSON.parse(localStorage.getItem('translationHistory') || '[]');
-            this.dashStats.translationSessions = translationHistory.length;
-            if (translationHistory.length > 0) {
-                const totalScore = translationHistory.reduce((sum, item) => sum + item.score, 0);
-                this.dashStats.translationAvg = (totalScore / translationHistory.length).toFixed(1);
-            } else {
-                this.dashStats.translationAvg = '-';
+        async loadPracticeStats() {
+            try {
+                const response = await fetchAPI('/practice/all/stats');
+                if (response.success) {
+                    this.dashStats.translationSessions = response.stats.translation.total;
+                    this.dashStats.translationAvg = response.stats.translation.avg_score || '-';
+                    this.dashStats.conversationSessions = response.stats.conversation.total;
+                    this.dashStats.conversationAvg = response.stats.conversation.avg_score || '-';
+                    // Store chart data for later use
+                    this.practiceChartData = response.chart_data;
+                }
+            } catch (error) {
+                console.error('Failed to load practice stats:', error);
             }
 
-            // Load Conversation Practice stats
-            const conversationHistory = JSON.parse(localStorage.getItem('conversationHistory') || '[]');
-            this.dashStats.conversationSessions = conversationHistory.length;
-            if (conversationHistory.length > 0) {
-                const totalScore = conversationHistory.reduce((sum, item) => sum + item.score, 0);
-                this.dashStats.conversationAvg = (totalScore / conversationHistory.length).toFixed(1);
-            } else {
-                this.dashStats.conversationAvg = '-';
-            }
-
-            // Load Flashcard stats
+            // Load Flashcard stats (still from localStorage as it's session-based)
             const flashcardStats = JSON.parse(localStorage.getItem('flashcardStats') || '{"sessions": 0, "totalKnown": 0, "totalCards": 0}');
             this.dashStats.flashcardSessions = flashcardStats.sessions || 0;
             if (flashcardStats.totalCards > 0) {
@@ -242,19 +268,15 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        loadRecentActivity() {
-            const translationHistory = JSON.parse(localStorage.getItem('translationHistory') || '[]');
-            const conversationHistory = JSON.parse(localStorage.getItem('conversationHistory') || '[]');
-
-            // Merge and sort by date
-            const allActivity = [
-                ...translationHistory.map(item => ({ ...item, type: 'Translation' })),
-                ...conversationHistory.map(item => ({ ...item, type: 'Conversation' }))
-            ];
-
-            // Sort by date descending and take top 10
-            allActivity.sort((a, b) => new Date(b.date) - new Date(a.date));
-            this.recentActivity = allActivity.slice(0, 10);
+        async loadRecentActivity() {
+            try {
+                const response = await fetchAPI('/practice/recent?limit=10');
+                if (response.success) {
+                    this.recentActivity = response.activity;
+                }
+            } catch (error) {
+                console.error('Failed to load recent activity:', error);
+            }
         },
 
         formatDate(dateStr) {
@@ -273,40 +295,28 @@ document.addEventListener('alpine:init', () => {
             // Progress Chart - Practice Score Trend
             const progressCtx = document.getElementById('progressChart');
             if (progressCtx) {
-                const translationHistory = JSON.parse(localStorage.getItem('translationHistory') || '[]');
-                const conversationHistory = JSON.parse(localStorage.getItem('conversationHistory') || '[]');
-
-                // Get last 7 days scores
+                // Use API data if available
                 const last7Days = [];
                 const translationScores = [];
                 const conversationScores = [];
 
-                for (let i = 6; i >= 0; i--) {
-                    const date = new Date();
-                    date.setDate(date.getDate() - i);
-                    const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-                    last7Days.push(dateStr);
-
-                    const dayStart = new Date(date.setHours(0, 0, 0, 0));
-                    const dayEnd = new Date(date.setHours(23, 59, 59, 999));
-
-                    // Calculate average translation score for this day
-                    const dayTranslations = translationHistory.filter(item => {
-                        const itemDate = new Date(item.date);
-                        return itemDate >= dayStart && itemDate <= dayEnd;
+                if (this.practiceChartData && this.practiceChartData.length > 0) {
+                    // Use API chart data
+                    this.practiceChartData.forEach(day => {
+                        const date = new Date(day.date);
+                        last7Days.push(date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }));
+                        translationScores.push(day.translation);
+                        conversationScores.push(day.conversation);
                     });
-                    translationScores.push(dayTranslations.length > 0
-                        ? dayTranslations.reduce((sum, item) => sum + item.score, 0) / dayTranslations.length
-                        : null);
-
-                    // Calculate average conversation score for this day
-                    const dayConversations = conversationHistory.filter(item => {
-                        const itemDate = new Date(item.date);
-                        return itemDate >= dayStart && itemDate <= dayEnd;
-                    });
-                    conversationScores.push(dayConversations.length > 0
-                        ? dayConversations.reduce((sum, item) => sum + item.score, 0) / dayConversations.length
-                        : null);
+                } else {
+                    // Fallback: generate empty days
+                    for (let i = 6; i >= 0; i--) {
+                        const date = new Date();
+                        date.setDate(date.getDate() - i);
+                        last7Days.push(date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }));
+                        translationScores.push(null);
+                        conversationScores.push(null);
+                    }
                 }
 
                 this.progressChart = new Chart(progressCtx, {
@@ -718,22 +728,41 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
         // Matching quiz state
         selectedMatchWord: null,
         matchingAnswers: {},
+        // Flashcard integration
+        fromFlashcards: false,
+        studiedWordIds: [],
 
         async init() {
-            // Quiz uses learned vocabulary only, no topics needed
+            // Check if coming from flashcards
+            if (localStorage.getItem('quizFromFlashcards') === 'true') {
+                this.fromFlashcards = true;
+                this.studiedWordIds = JSON.parse(localStorage.getItem('lastStudiedWords') || '[]');
+                localStorage.removeItem('quizFromFlashcards');
+
+                // Show notification
+                Alpine.store('app')?.showToast?.('Quiz loaded with your studied words!', 'success');
+            }
         },
 
         async startQuiz() {
             this.loading = true;
 
             try {
+                // Build request body
+                const body = {
+                    quiz_type: this.quizType,
+                    num_questions: parseInt(this.numQuestions)
+                };
+
+                // If coming from flashcards, include studied word IDs
+                if (this.fromFlashcards && this.studiedWordIds.length > 0) {
+                    body.vocabulary_ids = this.studiedWordIds;
+                }
+
                 // Generate quiz from all learned vocabulary (use_learned_only is default true in backend)
                 const response = await fetchAPI('/quiz/generate', {
                     method: 'POST',
-                    body: JSON.stringify({
-                        quiz_type: this.quizType,
-                        num_questions: parseInt(this.numQuestions)
-                    })
+                    body: JSON.stringify(body)
                 });
 
                 if (response.success) {
@@ -910,39 +939,63 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
         translationHistory: [],
 
         async init() {
-            this.loadTranslationHistory();
+            await this.loadTranslationHistory();
         },
 
-        loadTranslationHistory() {
-            const saved = localStorage.getItem('translationHistory');
-            if (saved) {
-                this.translationHistory = JSON.parse(saved);
+        async loadTranslationHistory() {
+            try {
+                const response = await fetchAPI('/practice/translation');
+                if (response.success) {
+                    this.translationHistory = response.history;
+                }
+            } catch (error) {
+                console.error('Failed to load translation history:', error);
             }
         },
 
-        saveTranslationHistory() {
+        async saveTranslationHistory() {
             if (!this.practiceScore) return;
 
-            const historyItem = {
-                date: new Date().toISOString(),
-                topic: this.practiceTopic,
-                level: this.practiceLevel,
-                direction: this.practiceDirection,
-                length: this.practiceLength,
-                complexity: this.sentenceComplexity,
-                score: parseFloat(this.practiceScore)
-            };
+            try {
+                const response = await fetchAPI('/practice/translation', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        topic: this.practiceTopic,
+                        level: this.practiceLevel,
+                        direction: this.practiceDirection,
+                        length: this.practiceLength,
+                        complexity: this.sentenceComplexity,
+                        score: parseFloat(this.practiceScore)
+                    })
+                });
 
-            this.translationHistory.unshift(historyItem);
-            localStorage.setItem('translationHistory', JSON.stringify(this.translationHistory));
-            this.practiceScore = '';
-            Alpine.store('app')?.showToast?.('Đã lưu vào lịch sử!', 'success');
+                if (response.success) {
+                    this.translationHistory.unshift(response.practice);
+                    this.practiceScore = '';
+                    Alpine.store('app')?.showToast?.('Đã lưu vào lịch sử!', 'success');
+                }
+            } catch (error) {
+                console.error('Failed to save translation history:', error);
+                Alpine.store('app')?.showToast?.('Không thể lưu!', 'error');
+            }
         },
 
-        deleteTranslationHistory(index) {
-            this.translationHistory.splice(index, 1);
-            localStorage.setItem('translationHistory', JSON.stringify(this.translationHistory));
-            Alpine.store('app')?.showToast?.('Đã xóa!', 'success');
+        async deleteTranslationHistory(index) {
+            const item = this.translationHistory[index];
+            if (!item || !item.id) return;
+
+            try {
+                const response = await fetchAPI(`/practice/translation/${item.id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.success) {
+                    this.translationHistory.splice(index, 1);
+                    Alpine.store('app')?.showToast?.('Đã xóa!', 'success');
+                }
+            } catch (error) {
+                console.error('Failed to delete:', error);
+            }
         },
 
         formatDate(dateStr) {
@@ -1057,53 +1110,77 @@ Your translation:`;
         chatScore: '',
         conversationHistory: [],
 
-        async init() {
-            this.loadConversationHistory();
+        styleNames: {
+            'casual': 'Casual',
+            'formal': 'Formal',
+            'roleplay': 'Role-play',
+            'debate': 'Debate',
+            'interview': 'Interview'
         },
 
-        loadConversationHistory() {
-            const saved = localStorage.getItem('conversationHistory');
-            if (saved) {
-                this.conversationHistory = JSON.parse(saved);
+        lengthNames: {
+            'short': 'Short',
+            'medium': 'Medium',
+            'long': 'Long'
+        },
+
+        async init() {
+            await this.loadConversationHistory();
+        },
+
+        async loadConversationHistory() {
+            try {
+                const response = await fetchAPI('/practice/conversation');
+                if (response.success) {
+                    this.conversationHistory = response.history;
+                }
+            } catch (error) {
+                console.error('Failed to load conversation history:', error);
             }
         },
 
-        saveConversationHistory() {
+        async saveConversationHistory() {
             if (!this.chatScore) return;
 
-            const styleNames = {
-                'casual': 'Casual',
-                'formal': 'Formal',
-                'roleplay': 'Role-play',
-                'debate': 'Debate',
-                'interview': 'Interview'
-            };
+            try {
+                const response = await fetchAPI('/practice/conversation', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        topic: this.chatTopic,
+                        level: this.chatLevel,
+                        style: this.styleNames[this.chatStyle] || this.chatStyle,
+                        length: this.lengthNames[this.chatLength] || this.chatLength,
+                        score: parseFloat(this.chatScore)
+                    })
+                });
 
-            const lengthNames = {
-                'short': 'Short',
-                'medium': 'Medium',
-                'long': 'Long'
-            };
-
-            const historyItem = {
-                date: new Date().toISOString(),
-                topic: this.chatTopic,
-                level: this.chatLevel,
-                style: styleNames[this.chatStyle] || this.chatStyle,
-                length: lengthNames[this.chatLength] || this.chatLength,
-                score: parseFloat(this.chatScore)
-            };
-
-            this.conversationHistory.unshift(historyItem);
-            localStorage.setItem('conversationHistory', JSON.stringify(this.conversationHistory));
-            this.chatScore = '';
-            Alpine.store('app')?.showToast?.('Đã lưu vào lịch sử!', 'success');
+                if (response.success) {
+                    this.conversationHistory.unshift(response.practice);
+                    this.chatScore = '';
+                    Alpine.store('app')?.showToast?.('Đã lưu vào lịch sử!', 'success');
+                }
+            } catch (error) {
+                console.error('Failed to save conversation history:', error);
+                Alpine.store('app')?.showToast?.('Không thể lưu!', 'error');
+            }
         },
 
-        deleteConversationHistory(index) {
-            this.conversationHistory.splice(index, 1);
-            localStorage.setItem('conversationHistory', JSON.stringify(this.conversationHistory));
-            Alpine.store('app')?.showToast?.('Đã xóa!', 'success');
+        async deleteConversationHistory(index) {
+            const item = this.conversationHistory[index];
+            if (!item || !item.id) return;
+
+            try {
+                const response = await fetchAPI(`/practice/conversation/${item.id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.success) {
+                    this.conversationHistory.splice(index, 1);
+                    Alpine.store('app')?.showToast?.('Đã xóa!', 'success');
+                }
+            } catch (error) {
+                console.error('Failed to delete:', error);
+            }
         },
 
         formatDate(dateStr) {
@@ -1214,6 +1291,299 @@ START the conversation now! Greet me and ask an opening question about "${this.c
         }
     }));
 
+    // Export/Import Page Component
+    Alpine.data('exportPage', () => ({
+        exportStats: {
+            total_vocabulary: 0,
+            learned_vocabulary: 0,
+            by_topic: {},
+            by_level: {}
+        },
+        exportLearnedOnly: true,
+        dragOver: false,
+        importing: false,
+        importResult: null,
+
+        async init() {
+            await this.loadExportStats();
+        },
+
+        async loadExportStats() {
+            try {
+                const response = await fetchAPI('/export/stats');
+                if (response.success) {
+                    this.exportStats = response.stats;
+                }
+            } catch (error) {
+                console.error('Failed to load export stats:', error);
+            }
+        },
+
+        exportData(format) {
+            const learnedParam = this.exportLearnedOnly ? 'learned_only=true' : 'learned_only=false';
+            const url = `/api/export/vocabulary/${format}?${learnedParam}`;
+
+            // Create a temporary link to download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `vocabulary_export.${format === 'anki' ? 'txt' : format}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            Alpine.store('app')?.showToast?.(`Exporting ${format.toUpperCase()}...`, 'success');
+        },
+
+        handleDrop(event) {
+            this.dragOver = false;
+            const file = event.dataTransfer.files[0];
+            if (file) {
+                this.importFile(file);
+            }
+        },
+
+        handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                this.importFile(file);
+            }
+        },
+
+        async importFile(file) {
+            this.importing = true;
+            this.importResult = null;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                let endpoint = '/api/import/vocabulary/json';
+                if (file.name.endsWith('.csv')) {
+                    endpoint = '/api/import/vocabulary/csv';
+                }
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                this.importResult = result;
+
+                if (result.success) {
+                    await this.loadExportStats();
+                    Alpine.store('app')?.showToast?.(`Imported ${result.added} words!`, 'success');
+                }
+            } catch (error) {
+                console.error('Import failed:', error);
+                this.importResult = {
+                    success: false,
+                    message: 'Import failed: ' + error.message
+                };
+            } finally {
+                this.importing = false;
+            }
+        }
+    }));
+
+    // Analytics Page Component
+    Alpine.data('analyticsPage', () => ({
+        summary: {
+            total_words_learned: 0,
+            total_quizzes: 0,
+            average_quiz_score: 0
+        },
+        streak: {
+            current_streak: 0,
+            longest_streak: 0,
+            total_active_days: 0
+        },
+        heatmapData: [],
+        heatmapWeeks: [],
+        maxCount: 1,
+        weeklyStats: [],
+        monthlyStats: [],
+        weeklyChart: null,
+        scoreChart: null,
+
+        async init() {
+            await Promise.all([
+                this.loadSummary(),
+                this.loadStreak(),
+                this.loadHeatmap(),
+                this.loadWeeklyStats(),
+                this.loadMonthlyStats()
+            ]);
+            this.initCharts();
+        },
+
+        async loadSummary() {
+            try {
+                const response = await fetchAPI('/analytics/summary');
+                if (response.success) {
+                    this.summary = response.summary;
+                }
+            } catch (error) {
+                console.error('Failed to load summary:', error);
+            }
+        },
+
+        async loadStreak() {
+            try {
+                const response = await fetchAPI('/analytics/streak');
+                if (response.success) {
+                    this.streak = response;
+                }
+            } catch (error) {
+                console.error('Failed to load streak:', error);
+            }
+        },
+
+        async loadHeatmap() {
+            try {
+                const response = await fetchAPI('/analytics/heatmap?days=365');
+                if (response.success) {
+                    this.heatmapData = response.heatmap;
+                    this.maxCount = response.max_count || 1;
+                    this.processHeatmap();
+                }
+            } catch (error) {
+                console.error('Failed to load heatmap:', error);
+            }
+        },
+
+        processHeatmap() {
+            // Group into weeks (columns) with days (rows)
+            const weeks = [];
+            let currentWeek = [];
+
+            // Pad first week to start on Sunday
+            if (this.heatmapData.length > 0) {
+                const firstDate = new Date(this.heatmapData[0].date);
+                const firstDay = firstDate.getDay();
+                for (let i = 0; i < firstDay; i++) {
+                    currentWeek.push({ date: null, count: 0 });
+                }
+            }
+
+            for (const day of this.heatmapData) {
+                currentWeek.push(day);
+                if (currentWeek.length === 7) {
+                    weeks.push(currentWeek);
+                    currentWeek = [];
+                }
+            }
+
+            // Push remaining days
+            if (currentWeek.length > 0) {
+                while (currentWeek.length < 7) {
+                    currentWeek.push({ date: null, count: 0 });
+                }
+                weeks.push(currentWeek);
+            }
+
+            this.heatmapWeeks = weeks;
+        },
+
+        getHeatmapColor(count) {
+            if (count === 0) return '#ebedf0';
+            const intensity = count / this.maxCount;
+            if (intensity <= 0.25) return '#9be9a8';
+            if (intensity <= 0.5) return '#40c463';
+            if (intensity <= 0.75) return '#30a14e';
+            return '#216e39';
+        },
+
+        async loadWeeklyStats() {
+            try {
+                const response = await fetchAPI('/analytics/weekly');
+                if (response.success) {
+                    this.weeklyStats = response.weeks;
+                }
+            } catch (error) {
+                console.error('Failed to load weekly stats:', error);
+            }
+        },
+
+        async loadMonthlyStats() {
+            try {
+                const response = await fetchAPI('/analytics/monthly');
+                if (response.success) {
+                    this.monthlyStats = response.months;
+                }
+            } catch (error) {
+                console.error('Failed to load monthly stats:', error);
+            }
+        },
+
+        initCharts() {
+            // Weekly Progress Chart
+            const weeklyCtx = document.getElementById('weeklyChart');
+            if (weeklyCtx && this.weeklyStats.length > 0) {
+                this.weeklyChart = new Chart(weeklyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: this.weeklyStats.map(w => {
+                            const date = new Date(w.week_start);
+                            return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                        }),
+                        datasets: [{
+                            label: 'Words Learned',
+                            data: this.weeklyStats.map(w => w.words_learned),
+                            backgroundColor: '#3B82F6',
+                            borderRadius: 4
+                        }, {
+                            label: 'Quizzes',
+                            data: this.weeklyStats.map(w => w.quizzes),
+                            backgroundColor: '#10B981',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+
+            // Score Trends Chart
+            const scoreCtx = document.getElementById('scoreChart');
+            if (scoreCtx && this.weeklyStats.length > 0) {
+                this.scoreChart = new Chart(scoreCtx, {
+                    type: 'line',
+                    data: {
+                        labels: this.weeklyStats.map(w => {
+                            const date = new Date(w.week_start);
+                            return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                        }),
+                        datasets: [{
+                            label: 'Quiz Avg Score',
+                            data: this.weeklyStats.map(w => w.quiz_avg || null),
+                            borderColor: '#8B5CF6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                title: { display: true, text: 'Score %' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    }));
+
     // Flashcards Page Component
     Alpine.data('flashcardsPage', () => ({
         numWords: 10,
@@ -1225,9 +1595,72 @@ START the conversation now! Greet me and ask an opening question about "${this.c
         currentIndex: 0,
         isFlipped: false,
         knownCount: 0,
+        // Swipe state
+        touchStartX: 0,
+        touchStartY: 0,
+        touchEndX: 0,
+        touchEndY: 0,
+        swipeDirection: null,
+        isSwiping: false,
 
         async init() {
             await this.checkLearnedCount();
+            this.setupSwipeListeners();
+        },
+
+        setupSwipeListeners() {
+            // Add touch listeners when study is active
+            this.$watch('studyActive', (active) => {
+                if (active) {
+                    this.$nextTick(() => {
+                        const card = document.querySelector('.flashcard-swipe');
+                        if (card) {
+                            card.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: true });
+                            card.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: true });
+                            card.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: true });
+                        }
+                    });
+                }
+            });
+        },
+
+        handleTouchStart(e) {
+            this.touchStartX = e.changedTouches[0].screenX;
+            this.touchStartY = e.changedTouches[0].screenY;
+            this.isSwiping = true;
+        },
+
+        handleTouchMove(e) {
+            if (!this.isSwiping) return;
+            this.touchEndX = e.changedTouches[0].screenX;
+            this.touchEndY = e.changedTouches[0].screenY;
+        },
+
+        handleTouchEnd(e) {
+            if (!this.isSwiping) return;
+            this.isSwiping = false;
+
+            const diffX = this.touchEndX - this.touchStartX;
+            const diffY = this.touchEndY - this.touchStartY;
+
+            // Only detect horizontal swipes (ignore vertical)
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                if (diffX > 0) {
+                    // Swipe right = Know
+                    this.swipeCard(true);
+                } else {
+                    // Swipe left = Don't Know
+                    this.swipeCard(false);
+                }
+            }
+        },
+
+        swipeCard(known) {
+            this.swipeDirection = known ? 'right' : 'left';
+            setTimeout(() => {
+                this.markCard(known);
+                this.swipeDirection = null;
+            }, 300);
         },
 
         async checkLearnedCount() {
@@ -1295,6 +1728,16 @@ START the conversation now! Greet me and ask an opening question about "${this.c
             stats.totalKnown += this.knownCount;
             stats.totalCards += this.flashcards.length;
             localStorage.setItem('flashcardStats', JSON.stringify(stats));
+
+            // Save studied word IDs for quiz suggestion
+            const studiedIds = this.flashcards.map(f => f.id);
+            localStorage.setItem('lastStudiedWords', JSON.stringify(studiedIds));
+        },
+
+        goToQuizWithStudiedWords() {
+            // Navigate to quiz page - it will auto-detect studied words
+            localStorage.setItem('quizFromFlashcards', 'true');
+            window.dispatchEvent(new CustomEvent('navigate', { detail: 'quiz' }));
         },
 
         resetStudy() {
