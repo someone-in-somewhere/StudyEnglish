@@ -99,7 +99,7 @@ class QuizQuestion(BaseModel):
     # For matching quiz
     words: Optional[List[Dict[str, Any]]] = None
     meanings: Optional[List[Dict[str, Any]]] = None
-    correct_mapping: Optional[Dict[str, int]] = None
+    correct_mapping: Optional[Dict[Any, Any]] = None  # {word_id: meaning_id}
     vocabulary_ids: Optional[List[int]] = None
     type: Optional[str] = None  # 'matching' for matching questions
 

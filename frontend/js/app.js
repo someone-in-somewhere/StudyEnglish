@@ -569,6 +569,9 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
         score: 0,
         correctAnswers: 0,
         quizFeedback: [],
+        // Matching quiz state
+        selectedMatchWord: null,
+        matchingAnswers: {},
 
         async init() {
             // Quiz uses learned vocabulary only, no topics needed
@@ -629,6 +632,30 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
             this.selectedAnswer = idx;
         },
 
+        // Matching quiz functions
+        selectMatchWord(wordId) {
+            this.selectedMatchWord = wordId;
+        },
+
+        selectMatchMeaning(meaningId) {
+            if (this.selectedMatchWord !== null) {
+                this.matchingAnswers[this.selectedMatchWord] = meaningId;
+                this.selectedMatchWord = null;
+            }
+        },
+
+        getMatchedMeaning(wordId) {
+            const meaningId = this.matchingAnswers[wordId];
+            if (!meaningId) return '';
+            const question = this.questions[this.currentQuestion];
+            const meaning = question?.meanings?.find(m => m.id === meaningId);
+            return meaning ? String.fromCharCode(64 + meaningId) : '';
+        },
+
+        isMeaningMatched(meaningId) {
+            return Object.values(this.matchingAnswers).includes(meaningId);
+        },
+
         previousQuestion() {
             if (this.currentQuestion > 0) {
                 this.saveCurrentAnswer();
@@ -654,6 +681,8 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
 
             if (this.quizType === 'fill_blank') {
                 answer = this.fillBlankAnswer;
+            } else if (this.quizType === 'matching') {
+                answer = { ...this.matchingAnswers };
             } else {
                 answer = this.selectedAnswer;
             }
@@ -672,6 +701,9 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
 
             if (this.quizType === 'fill_blank') {
                 this.fillBlankAnswer = saved?.user_answer || '';
+            } else if (this.quizType === 'matching') {
+                this.matchingAnswers = saved?.user_answer || {};
+                this.selectedMatchWord = null;
             } else {
                 this.selectedAnswer = saved?.user_answer ?? null;
             }
@@ -711,6 +743,8 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
             this.answers = [];
             this.selectedAnswer = null;
             this.fillBlankAnswer = '';
+            this.matchingAnswers = {};
+            this.selectedMatchWord = null;
             this.currentQuestion = 0;
             this.timeElapsed = 0;
         }
