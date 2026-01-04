@@ -97,6 +97,20 @@ def toggle_favorite(
     )
 
 
+@router.delete("/unlearn/{vocabulary_id}", response_model=BaseResponse)
+def unlearn_vocabulary(
+    vocabulary_id: int,
+    db: Session = Depends(get_sync_session)
+):
+    """Remove a vocabulary word from learned list."""
+    service = VocabularyService(db)
+
+    if service.unlearn_vocabulary(vocabulary_id):
+        return BaseResponse(success=True, message="Removed from learned list")
+    else:
+        raise HTTPException(status_code=404, detail="Vocabulary not found in learned list")
+
+
 @router.get("/topic/{topic}")
 def get_vocabulary_by_topic(
     topic: str,

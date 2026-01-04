@@ -401,17 +401,36 @@
                                                 <p class="text-sm text-gray-600 italic" x-text="word.example_en"></p>
                                                 <p class="text-sm text-gray-500 mt-1" x-text="word.example_vi"></p>
                                             </div>
-                                            <div x-show="word.synonyms && word.synonyms.length > 0" class="flex items-center space-x-2">
+                                            <div x-show="word.synonyms && word.synonyms.length > 0" class="flex items-center space-x-2 mb-2">
                                                 <span class="text-xs text-gray-500">Synonyms:</span>
                                                 <template x-for="syn in word.synonyms" :key="syn">
                                                     <span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs" x-text="syn"></span>
                                                 </template>
                                             </div>
+                                            <!-- Learning Stats (only for learned words) -->
+                                            <div x-show="word.user_progress" class="flex items-center space-x-4 text-xs text-gray-500 mt-2 pt-2 border-t">
+                                                <span>
+                                                    <i class="fas fa-calendar-alt mr-1"></i>
+                                                    Learned: <span x-text="word.user_progress ? formatDate(word.user_progress.learned_at) : ''"></span>
+                                                </span>
+                                                <span>
+                                                    <i class="fas fa-redo mr-1"></i>
+                                                    Reviews: <span x-text="word.user_progress ? word.user_progress.review_count : 0"></span>
+                                                </span>
+                                                <span>
+                                                    <i class="fas fa-star mr-1"></i>
+                                                    Mastery: <span x-text="word.user_progress ? word.user_progress.mastery_level : 1"></span>/5
+                                                </span>
+                                            </div>
                                         </div>
                                         <div class="flex flex-col space-y-2 ml-4">
-                                            <button @click="markAsLearned(word.id)"
+                                            <button x-show="!word.user_progress" @click="markAsLearned(word.id)"
                                                     class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-green-600 transition-colors">
                                                 <i class="fas fa-check mr-1"></i> Learn
+                                            </button>
+                                            <button x-show="word.user_progress" @click="removeFromLearned(word.id)"
+                                                    class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                                                <i class="fas fa-trash mr-1"></i> Remove
                                             </button>
                                             <button @click="toggleFavorite(word.id)"
                                                     class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors"

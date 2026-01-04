@@ -456,6 +456,28 @@ Generate {num_words} words for "{topic}" at {level} level:
             self.db.rollback()
             return False
 
+    def unlearn_vocabulary(self, vocabulary_id: int) -> bool:
+        """Remove a vocabulary word from learned list."""
+        try:
+            user_vocab = (
+                self.db.query(UserVocabulary)
+                .filter(UserVocabulary.vocabulary_id == vocabulary_id)
+                .first()
+            )
+
+            if user_vocab:
+                self.db.delete(user_vocab)
+                self.db.commit()
+                logger.info(f"Removed vocabulary {vocabulary_id} from learned list")
+                return True
+
+            return False
+
+        except Exception as e:
+            logger.error(f"Failed to unlearn vocabulary: {e}")
+            self.db.rollback()
+            return False
+
     def get_vocabulary_by_topic(
         self,
         topic: str,

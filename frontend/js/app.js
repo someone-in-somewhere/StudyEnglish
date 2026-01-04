@@ -315,6 +315,39 @@ document.addEventListener('alpine:init', () => {
             return viTrans ? `${topicName} (${viTrans})` : topicName;
         },
 
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        },
+
+        async removeFromLearned(vocabId) {
+            if (!confirm('Bạn có chắc muốn xóa từ này khỏi danh sách đã học?')) return;
+
+            try {
+                const response = await fetchAPI(`/vocabulary/unlearn/${vocabId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.success) {
+                    // Remove from current list
+                    this.vocabulary = this.vocabulary.filter(v => v.id !== vocabId);
+                    Alpine.store('app')?.showToast?.('Đã xóa khỏi danh sách học', 'success');
+                } else {
+                    Alpine.store('app')?.showToast?.(response.message || 'Không thể xóa', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to remove from learned:', error);
+                Alpine.store('app')?.showToast?.('Không thể xóa từ vựng', 'error');
+            }
+        },
+
         async init() {
             await this.loadTopics();
 
