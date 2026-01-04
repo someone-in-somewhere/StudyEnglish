@@ -103,6 +103,56 @@ def get_translation_stats(db: Session = Depends(get_sync_session)):
     }
 
 
+@router.get("/translation/topic-stats")
+def get_translation_topic_stats(db: Session = Depends(get_sync_session)):
+    """Get translation practice statistics grouped by topic."""
+    # Get all practices grouped by topic
+    topic_stats = db.query(
+        TranslationPractice.topic,
+        func.count(TranslationPractice.id).label('count'),
+        func.avg(TranslationPractice.score).label('avg_score'),
+        func.max(TranslationPractice.score).label('best_score'),
+        func.min(TranslationPractice.score).label('lowest_score'),
+        func.max(TranslationPractice.practiced_at).label('last_practiced')
+    ).group_by(TranslationPractice.topic).all()
+
+    # Get direction stats per topic
+    direction_stats = db.query(
+        TranslationPractice.topic,
+        TranslationPractice.direction,
+        func.count(TranslationPractice.id).label('count')
+    ).group_by(TranslationPractice.topic, TranslationPractice.direction).all()
+
+    # Build direction map
+    direction_map = {}
+    for stat in direction_stats:
+        if stat.topic not in direction_map:
+            direction_map[stat.topic] = {'vi_to_en': 0, 'en_to_vi': 0}
+        direction_map[stat.topic][stat.direction] = stat.count
+
+    result = []
+    for stat in topic_stats:
+        result.append({
+            "topic": stat.topic,
+            "total_sessions": stat.count,
+            "avg_score": round(float(stat.avg_score or 0), 1),
+            "best_score": round(float(stat.best_score or 0), 1),
+            "lowest_score": round(float(stat.lowest_score or 0), 1),
+            "last_practiced": stat.last_practiced.isoformat() if stat.last_practiced else None,
+            "vi_to_en_count": direction_map.get(stat.topic, {}).get('vi_to_en', 0),
+            "en_to_vi_count": direction_map.get(stat.topic, {}).get('en_to_vi', 0)
+        })
+
+    # Sort by total sessions descending
+    result.sort(key=lambda x: x['total_sessions'], reverse=True)
+
+    return {
+        "success": True,
+        "topic_stats": result,
+        "total_topics": len(result)
+    }
+
+
 # ============ Conversation Practice ============
 
 @router.get("/conversation")
@@ -188,6 +238,55 @@ def get_conversation_stats(db: Session = Depends(get_sync_session)):
             "weekly_sessions": len(weekly),
             "weekly_avg": round(sum(p.score for p in weekly) / len(weekly), 1) if weekly else 0
         }
+    }
+
+
+@router.get("/conversation/topic-stats")
+def get_conversation_topic_stats(db: Session = Depends(get_sync_session)):
+    """Get conversation practice statistics grouped by topic."""
+    # Get all practices grouped by topic
+    topic_stats = db.query(
+        ConversationPractice.topic,
+        func.count(ConversationPractice.id).label('count'),
+        func.avg(ConversationPractice.score).label('avg_score'),
+        func.max(ConversationPractice.score).label('best_score'),
+        func.min(ConversationPractice.score).label('lowest_score'),
+        func.max(ConversationPractice.practiced_at).label('last_practiced')
+    ).group_by(ConversationPractice.topic).all()
+
+    # Get style stats per topic
+    style_stats = db.query(
+        ConversationPractice.topic,
+        ConversationPractice.style,
+        func.count(ConversationPractice.id).label('count')
+    ).group_by(ConversationPractice.topic, ConversationPractice.style).all()
+
+    # Build style map
+    style_map = {}
+    for stat in style_stats:
+        if stat.topic not in style_map:
+            style_map[stat.topic] = {}
+        style_map[stat.topic][stat.style] = stat.count
+
+    result = []
+    for stat in topic_stats:
+        result.append({
+            "topic": stat.topic,
+            "total_sessions": stat.count,
+            "avg_score": round(float(stat.avg_score or 0), 1),
+            "best_score": round(float(stat.best_score or 0), 1),
+            "lowest_score": round(float(stat.lowest_score or 0), 1),
+            "last_practiced": stat.last_practiced.isoformat() if stat.last_practiced else None,
+            "styles": style_map.get(stat.topic, {})
+        })
+
+    # Sort by total sessions descending
+    result.sort(key=lambda x: x['total_sessions'], reverse=True)
+
+    return {
+        "success": True,
+        "topic_stats": result,
+        "total_topics": len(result)
     }
 
 

@@ -1095,6 +1095,101 @@
                             </div>
                         </div>
 
+                        <!-- Topic Statistics Table -->
+                        <div class="mt-6 bg-white rounded-xl shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold">
+                                    <i class="fas fa-chart-bar mr-2 text-indigo-500"></i>
+                                    Thống Kê Theo Chủ Đề
+                                </h3>
+                                <button @click="showTopicStats = !showTopicStats" class="text-sm text-primary hover:underline">
+                                    <span x-text="showTopicStats ? 'Ẩn thống kê' : 'Xem thống kê'"></span>
+                                    <i class="fas ml-1" :class="showTopicStats ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                </button>
+                            </div>
+
+                            <div x-show="showTopicStats" x-collapse>
+                                <!-- Loading -->
+                                <div x-show="topicStatsLoading" class="text-center py-8">
+                                    <div class="loading-spinner mx-auto mb-2"></div>
+                                    <p class="text-gray-500">Đang tải...</p>
+                                </div>
+
+                                <!-- Empty -->
+                                <div x-show="!topicStatsLoading && topicStats.length === 0" class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-chart-pie text-4xl mb-2"></i>
+                                    <p>Chưa có dữ liệu thống kê</p>
+                                </div>
+
+                                <!-- Stats Table -->
+                                <div x-show="!topicStatsLoading && topicStats.length > 0" class="overflow-x-auto">
+                                    <table class="w-full text-sm">
+                                        <thead>
+                                            <tr class="bg-gray-50">
+                                                <th class="px-4 py-3 text-left font-medium text-gray-600">Chủ đề</th>
+                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Số lần</th>
+                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Điểm TB</th>
+                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Cao nhất</th>
+                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Thấp nhất</th>
+                                                <th class="px-4 py-3 text-center font-medium text-gray-600">VI→EN</th>
+                                                <th class="px-4 py-3 text-center font-medium text-gray-600">EN→VI</th>
+                                                <th class="px-4 py-3 text-left font-medium text-gray-600">Lần cuối</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="stat in topicStats" :key="stat.topic">
+                                                <tr class="border-t hover:bg-gray-50">
+                                                    <td class="px-4 py-3 font-medium" x-text="stat.topic"></td>
+                                                    <td class="px-4 py-3 text-center">
+                                                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded" x-text="stat.total_sessions"></span>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-center">
+                                                        <span class="px-2 py-1 rounded font-semibold"
+                                                              :class="getScoreColor(stat.avg_score)"
+                                                              x-text="stat.avg_score"></span>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-center">
+                                                        <span class="text-green-600 font-medium" x-text="stat.best_score"></span>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-center">
+                                                        <span class="text-red-600 font-medium" x-text="stat.lowest_score"></span>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-center">
+                                                        <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs" x-text="stat.vi_to_en_count"></span>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-center">
+                                                        <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs" x-text="stat.en_to_vi_count"></span>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-gray-500 text-xs" x-text="formatStatDate(stat.last_practiced)"></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Summary -->
+                                <div x-show="!topicStatsLoading && topicStats.length > 0" class="mt-4 pt-4 border-t grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                                    <div>
+                                        <p class="text-2xl font-bold text-primary" x-text="topicStats.length"></p>
+                                        <p class="text-xs text-gray-500">Chủ đề đã học</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold text-blue-600" x-text="topicStats.reduce((sum, s) => sum + s.total_sessions, 0)"></p>
+                                        <p class="text-xs text-gray-500">Tổng buổi học</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold text-green-600"
+                                           x-text="(topicStats.reduce((sum, s) => sum + s.avg_score * s.total_sessions, 0) / topicStats.reduce((sum, s) => sum + s.total_sessions, 0) || 0).toFixed(1)"></p>
+                                        <p class="text-xs text-gray-500">Điểm TB chung</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold text-purple-600" x-text="Math.max(...topicStats.map(s => s.best_score))"></p>
+                                        <p class="text-xs text-gray-500">Điểm cao nhất</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Translation History Table -->
                         <div class="mt-6 bg-white rounded-xl shadow p-6">
                             <h3 class="text-lg font-semibold mb-4">
@@ -1267,6 +1362,95 @@
                                             class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
                                         <i class="fas fa-plus mr-1"></i>Thêm vào lịch sử
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Topic Statistics Table -->
+                        <div class="mt-6 bg-white rounded-xl shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold">
+                                    <i class="fas fa-chart-bar mr-2 text-indigo-500"></i>
+                                    Thống Kê Theo Chủ Đề
+                                </h3>
+                                <button @click="showTopicStats = !showTopicStats" class="text-sm text-primary hover:underline">
+                                    <span x-text="showTopicStats ? 'Ẩn thống kê' : 'Xem thống kê'"></span>
+                                    <i class="fas ml-1" :class="showTopicStats ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                </button>
+                            </div>
+
+                            <div x-show="showTopicStats" x-collapse>
+                                <!-- Loading -->
+                                <div x-show="topicStatsLoading" class="text-center py-8">
+                                    <div class="loading-spinner mx-auto mb-2"></div>
+                                    <p class="text-gray-500">Đang tải...</p>
+                                </div>
+
+                                <!-- Empty -->
+                                <div x-show="!topicStatsLoading && topicStats.length === 0" class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-chart-pie text-4xl mb-2"></i>
+                                    <p>Chưa có dữ liệu thống kê</p>
+                                </div>
+
+                                <!-- Stats Table -->
+                                <div x-show="!topicStatsLoading && topicStats.length > 0" class="overflow-x-auto">
+                                    <table class="w-full text-sm">
+                                        <thead>
+                                            <tr class="bg-gray-50">
+                                                <th class="px-4 py-3 text-left font-medium text-gray-600">Chủ đề</th>
+                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Số lần</th>
+                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Điểm TB</th>
+                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Cao nhất</th>
+                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Thấp nhất</th>
+                                                <th class="px-4 py-3 text-left font-medium text-gray-600">Phong cách đã học</th>
+                                                <th class="px-4 py-3 text-left font-medium text-gray-600">Lần cuối</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="stat in topicStats" :key="stat.topic">
+                                                <tr class="border-t hover:bg-gray-50">
+                                                    <td class="px-4 py-3 font-medium" x-text="stat.topic"></td>
+                                                    <td class="px-4 py-3 text-center">
+                                                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded" x-text="stat.total_sessions"></span>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-center">
+                                                        <span class="px-2 py-1 rounded font-semibold"
+                                                              :class="getScoreColor(stat.avg_score)"
+                                                              x-text="stat.avg_score"></span>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-center">
+                                                        <span class="text-green-600 font-medium" x-text="stat.best_score"></span>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-center">
+                                                        <span class="text-red-600 font-medium" x-text="stat.lowest_score"></span>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-xs text-gray-600" x-text="getStylesList(stat.styles)"></td>
+                                                    <td class="px-4 py-3 text-gray-500 text-xs" x-text="formatStatDate(stat.last_practiced)"></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Summary -->
+                                <div x-show="!topicStatsLoading && topicStats.length > 0" class="mt-4 pt-4 border-t grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                                    <div>
+                                        <p class="text-2xl font-bold text-primary" x-text="topicStats.length"></p>
+                                        <p class="text-xs text-gray-500">Chủ đề đã học</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold text-blue-600" x-text="topicStats.reduce((sum, s) => sum + s.total_sessions, 0)"></p>
+                                        <p class="text-xs text-gray-500">Tổng buổi học</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold text-green-600"
+                                           x-text="(topicStats.reduce((sum, s) => sum + s.avg_score * s.total_sessions, 0) / topicStats.reduce((sum, s) => sum + s.total_sessions, 0) || 0).toFixed(1)"></p>
+                                        <p class="text-xs text-gray-500">Điểm TB chung</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold text-purple-600" x-text="Math.max(...topicStats.map(s => s.best_score))"></p>
+                                        <p class="text-xs text-gray-500">Điểm cao nhất</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>

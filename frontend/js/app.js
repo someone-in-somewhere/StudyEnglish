@@ -1015,9 +1015,42 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
         practicePrompt: '',
         practiceScore: '',
         translationHistory: [],
+        // Topic Stats
+        topicStats: [],
+        showTopicStats: false,
+        topicStatsLoading: false,
 
         async init() {
-            await this.loadTranslationHistory();
+            await Promise.all([
+                this.loadTranslationHistory(),
+                this.loadTopicStats()
+            ]);
+        },
+
+        async loadTopicStats() {
+            this.topicStatsLoading = true;
+            try {
+                const response = await fetchAPI('/practice/translation/topic-stats');
+                if (response.success) {
+                    this.topicStats = response.topic_stats || [];
+                }
+            } catch (error) {
+                console.error('Failed to load topic stats:', error);
+            } finally {
+                this.topicStatsLoading = false;
+            }
+        },
+
+        getScoreColor(score) {
+            if (score >= 8) return 'text-green-600 bg-green-100';
+            if (score >= 6) return 'text-yellow-600 bg-yellow-100';
+            return 'text-red-600 bg-red-100';
+        },
+
+        formatStatDate(isoDate) {
+            if (!isoDate) return '-';
+            const date = new Date(isoDate);
+            return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
         },
 
         async loadTranslationHistory() {
@@ -1187,6 +1220,10 @@ Your translation:`;
         chatPrompt: '',
         chatScore: '',
         conversationHistory: [],
+        // Topic Stats
+        topicStats: [],
+        showTopicStats: false,
+        topicStatsLoading: false,
 
         styleNames: {
             'casual': 'Casual',
@@ -1203,7 +1240,41 @@ Your translation:`;
         },
 
         async init() {
-            await this.loadConversationHistory();
+            await Promise.all([
+                this.loadConversationHistory(),
+                this.loadTopicStats()
+            ]);
+        },
+
+        async loadTopicStats() {
+            this.topicStatsLoading = true;
+            try {
+                const response = await fetchAPI('/practice/conversation/topic-stats');
+                if (response.success) {
+                    this.topicStats = response.topic_stats || [];
+                }
+            } catch (error) {
+                console.error('Failed to load topic stats:', error);
+            } finally {
+                this.topicStatsLoading = false;
+            }
+        },
+
+        getScoreColor(score) {
+            if (score >= 8) return 'text-green-600 bg-green-100';
+            if (score >= 6) return 'text-yellow-600 bg-yellow-100';
+            return 'text-red-600 bg-red-100';
+        },
+
+        formatStatDate(isoDate) {
+            if (!isoDate) return '-';
+            const date = new Date(isoDate);
+            return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        },
+
+        getStylesList(styles) {
+            if (!styles || Object.keys(styles).length === 0) return '-';
+            return Object.entries(styles).map(([style, count]) => `${style}(${count})`).join(', ');
         },
 
         async loadConversationHistory() {
