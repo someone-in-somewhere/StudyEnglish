@@ -293,14 +293,7 @@ document.addEventListener('alpine:init', () => {
 
         formatDate(dateStr) {
             if (!dateStr) return '';
-            // Treat as UTC if no timezone info, then convert to GMT+7
-            let isoStr = dateStr;
-            if (!dateStr.endsWith('Z') && !dateStr.includes('+')) {
-                isoStr = dateStr + 'Z';
-            }
-            const date = new Date(isoStr);
-            // Add 7 hours for GMT+7
-            date.setHours(date.getHours() + 7);
+            const date = new Date(dateStr);
             return date.toLocaleDateString('vi-VN', {
                 day: '2-digit',
                 month: '2-digit',
@@ -492,14 +485,7 @@ document.addEventListener('alpine:init', () => {
 
         formatDate(dateStr) {
             if (!dateStr) return '';
-            // Treat as UTC if no timezone info, then convert to GMT+7
-            let isoStr = dateStr;
-            if (!dateStr.endsWith('Z') && !dateStr.includes('+')) {
-                isoStr = dateStr + 'Z';
-            }
-            const date = new Date(isoStr);
-            // Add 7 hours for GMT+7
-            date.setHours(date.getHours() + 7);
+            const date = new Date(dateStr);
             return date.toLocaleDateString('vi-VN', {
                 day: '2-digit',
                 month: '2-digit',
@@ -811,14 +797,7 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
 
         formatDate(isoDate) {
             if (!isoDate) return '-';
-            // Treat as UTC if no timezone info, then convert to GMT+7
-            let isoStr = isoDate;
-            if (!isoDate.endsWith('Z') && !isoDate.includes('+')) {
-                isoStr = isoDate + 'Z';
-            }
-            const date = new Date(isoStr);
-            // Add 7 hours for GMT+7
-            date.setHours(date.getHours() + 7);
+            const date = new Date(isoDate);
             return date.toLocaleDateString('vi-VN', {
                 day: '2-digit',
                 month: '2-digit',
@@ -1070,13 +1049,7 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
 
         formatStatDate(isoDate) {
             if (!isoDate) return '-';
-            // Treat as UTC if no timezone info, then convert to GMT+7
-            let isoStr = isoDate;
-            if (!isoDate.endsWith('Z') && !isoDate.includes('+')) {
-                isoStr = isoDate + 'Z';
-            }
-            const date = new Date(isoStr);
-            date.setHours(date.getHours() + 7);
+            const date = new Date(isoDate);
             return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
         },
 
@@ -1142,14 +1115,7 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
 
         formatDate(dateStr) {
             if (!dateStr) return '';
-            // Treat as UTC if no timezone info, then convert to GMT+7
-            let isoStr = dateStr;
-            if (!dateStr.endsWith('Z') && !dateStr.includes('+')) {
-                isoStr = dateStr + 'Z';
-            }
-            const date = new Date(isoStr);
-            // Add 7 hours for GMT+7
-            date.setHours(date.getHours() + 7);
+            const date = new Date(dateStr);
             return date.toLocaleDateString('vi-VN', {
                 day: '2-digit',
                 month: '2-digit',
@@ -1306,13 +1272,7 @@ Your translation:`;
 
         formatStatDate(isoDate) {
             if (!isoDate) return '-';
-            // Treat as UTC if no timezone info, then convert to GMT+7
-            let isoStr = isoDate;
-            if (!isoDate.endsWith('Z') && !isoDate.includes('+')) {
-                isoStr = isoDate + 'Z';
-            }
-            const date = new Date(isoStr);
-            date.setHours(date.getHours() + 7);
+            const date = new Date(isoDate);
             return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
         },
 
@@ -1382,14 +1342,7 @@ Your translation:`;
 
         formatDate(dateStr) {
             if (!dateStr) return '';
-            // Treat as UTC if no timezone info, then convert to GMT+7
-            let isoStr = dateStr;
-            if (!dateStr.endsWith('Z') && !dateStr.includes('+')) {
-                isoStr = dateStr + 'Z';
-            }
-            const date = new Date(isoStr);
-            // Add 7 hours for GMT+7
-            date.setHours(date.getHours() + 7);
+            const date = new Date(dateStr);
             return date.toLocaleDateString('vi-VN', {
                 day: '2-digit',
                 month: '2-digit',
