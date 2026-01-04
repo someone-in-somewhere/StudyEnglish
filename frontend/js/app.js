@@ -2030,16 +2030,85 @@ START the conversation now! Greet me and ask an opening question about "${this.c
             ];
 
             try {
-                // Load actual progress from API
-                const statsResp = await fetchAPI('/progress/stats');
-                if (statsResp.success) {
-                    const today = new Date().toISOString().split('T')[0];
-                    // Update with real data if available
-                    this.dailyGoals[0].current = Math.min(10, statsResp.stats.total_words || 0) % 10 || 0;
+                // Fetch all stats in parallel
+                const [dailyResp, quizResp, srsResp, flashcardResp, practiceResp] = await Promise.all([
+                    fetchAPI('/progress/daily-summary').catch(() => null),
+                    fetchAPI('/quiz/stats').catch(() => null),
+                    fetchAPI('/srs/stats').catch(() => null),
+                    fetchAPI('/flashcards/stats').catch(() => null),
+                    fetchAPI('/practice/all/stats').catch(() => null)
+                ]);
+
+                // Words learned today from daily summary
+                if (dailyResp?.success && dailyResp.summary) {
+                    this.dailyGoals[0].current = dailyResp.summary.words_learned || 0;
+                    // Quizzes from daily summary
+                    this.dailyGoals[2].current = dailyResp.summary.quizzes_completed || 0;
                 }
+
+                // Flashcard reviews - check stats response
+                if (flashcardResp?.success && flashcardResp.stats) {
+                    this.dailyGoals[1].current = flashcardResp.stats.reviewed_today ||
+                                                  flashcardResp.stats.cards_reviewed_today ||
+                                                  flashcardResp.stats.total_reviews || 0;
+                }
+
+                // Quiz stats as fallback
+                if (quizResp?.success && quizResp.stats && this.dailyGoals[2].current === 0) {
+                    this.dailyGoals[2].current = quizResp.stats.quizzes_today ||
+                                                  quizResp.stats.total_quizzes || 0;
+                }
+
+                // SRS reviews completed
+                if (srsResp?.success && srsResp.stats) {
+                    this.dailyGoals[3].current = srsResp.stats.reviewed_today ||
+                                                  srsResp.stats.reviews_completed_today || 0;
+                }
+
+                // Practice minutes (translation + conversation)
+                if (practiceResp?.success && practiceResp.stats) {
+                    const transCount = practiceResp.stats.translation?.total ||
+                                       practiceResp.stats.translation_count || 0;
+                    const convCount = practiceResp.stats.conversation?.total ||
+                                      practiceResp.stats.conversation_count || 0;
+                    // Estimate ~3 minutes per practice session
+                    this.dailyGoals[4].current = Math.min(30, (transCount + convCount) * 3);
+                }
+
+                // Also check localStorage for today's activity tracking
+                this.loadLocalGoalProgress();
+
             } catch (e) {
                 console.error('Error loading goals:', e);
+                this.loadLocalGoalProgress();
             }
+        },
+
+        loadLocalGoalProgress() {
+            const today = new Date().toDateString();
+            const saved = localStorage.getItem('dailyGoalProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (data.date === today) {
+                    // Merge with existing data (take max values)
+                    if (data.flashcards) this.dailyGoals[1].current = Math.max(this.dailyGoals[1].current, data.flashcards);
+                    if (data.practiceMinutes) this.dailyGoals[4].current = Math.max(this.dailyGoals[4].current, data.practiceMinutes);
+                }
+            }
+        },
+
+        trackGoalProgress(type, value) {
+            const today = new Date().toDateString();
+            let data = { date: today };
+            const saved = localStorage.getItem('dailyGoalProgress');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.date === today) {
+                    data = parsed;
+                }
+            }
+            data[type] = (data[type] || 0) + value;
+            localStorage.setItem('dailyGoalProgress', JSON.stringify(data));
         },
 
         generateTodaySchedule() {
