@@ -80,7 +80,7 @@ def delete_translation_practice(
 
 
 @router.get("/translation/stats")
-def get_translation_stats(db: Session = Depends(get_db)):
+def get_translation_stats(db: Session = Depends(get_sync_session)):
     """Get translation practice statistics."""
     total = db.query(TranslationPractice).count()
 
@@ -168,7 +168,7 @@ def delete_conversation_practice(
 
 
 @router.get("/conversation/stats")
-def get_conversation_stats(db: Session = Depends(get_db)):
+def get_conversation_stats(db: Session = Depends(get_sync_session)):
     """Get conversation practice statistics."""
     total = db.query(ConversationPractice).count()
 
@@ -194,7 +194,7 @@ def get_conversation_stats(db: Session = Depends(get_db)):
 # ============ Combined Stats ============
 
 @router.get("/all/stats")
-def get_all_practice_stats(db: Session = Depends(get_db)):
+def get_all_practice_stats(db: Session = Depends(get_sync_session)):
     """Get combined practice statistics for dashboard."""
     # Translation stats
     trans_total = db.query(TranslationPractice).count()
