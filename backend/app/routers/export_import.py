@@ -283,7 +283,7 @@ async def import_vocabulary_json(
                 part_of_speech=item.get("part_of_speech", "noun"),
                 level=item.get("level", "B1"),
                 topic=item.get("topic", "Imported"),
-                example_en=item.get("example_en", ""),
+                example_en=item.get("example_en", item.get("example", "")),
                 example_vi=item.get("example_vi", ""),
                 synonyms=synonyms
             )
@@ -304,6 +304,114 @@ async def import_vocabulary_json(
         raise HTTPException(status_code=400, detail="Invalid JSON format")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@import_router.post("/vocabulary/direct")
+def import_vocabulary_direct(
+    data: dict,
+    db: Session = Depends(get_sync_session)
+):
+    """
+    Import vocabulary directly from JSON data (no file upload).
+    Accepts either:
+    - {"vocabulary": [...]} format
+    - Direct array: [...]
+    """
+    try:
+        # Support both formats
+        vocabulary_list = data.get("vocabulary", data if isinstance(data, list) else [])
+
+        # If data is a dict but not in expected format, try to use it as array
+        if isinstance(data, dict) and "vocabulary" not in data and not isinstance(data, list):
+            # Check if it looks like a single word object
+            if "word" in data:
+                vocabulary_list = [data]
+            else:
+                vocabulary_list = data.get("words", [])
+
+        added = 0
+        duplicates = 0
+        errors = 0
+
+        for item in vocabulary_list:
+            if not isinstance(item, dict):
+                errors += 1
+                continue
+
+            word = item.get("word", "").strip()
+            if not word:
+                errors += 1
+                continue
+
+            meaning = item.get("meaning_vi", item.get("meaning", "")).strip()
+            if not meaning:
+                errors += 1
+                continue
+
+            # Determine topic - use provided or default to "Practice Vocabulary"
+            topic = item.get("topic", "Practice Vocabulary")
+
+            # Check for duplicate (same word in same topic)
+            existing = db.query(Vocabulary).filter(
+                Vocabulary.word == word,
+                Vocabulary.topic == topic
+            ).first()
+
+            if existing:
+                duplicates += 1
+                continue
+
+            # Parse synonyms
+            synonyms = item.get("synonyms", "")
+            if isinstance(synonyms, list):
+                synonyms = json.dumps(synonyms)
+            elif isinstance(synonyms, str) and synonyms:
+                synonyms = json.dumps([s.strip() for s in synonyms.split(",")])
+            else:
+                synonyms = "[]"
+
+            vocab = Vocabulary(
+                word=word,
+                meaning_vi=meaning,
+                pronunciation=item.get("pronunciation", ""),
+                part_of_speech=item.get("part_of_speech", "noun"),
+                level=item.get("level", "B1"),
+                topic=topic,
+                example_en=item.get("example_en", item.get("example", "")),
+                example_vi=item.get("example_vi", ""),
+                synonyms=synonyms
+            )
+
+            db.add(vocab)
+
+            # Also add to UserVocabulary to mark as learned
+            db.flush()  # Get the vocab.id
+            user_vocab = UserVocabulary(
+                vocabulary_id=vocab.id
+            )
+            db.add(user_vocab)
+
+            added += 1
+
+        db.commit()
+
+        return {
+            "success": True,
+            "message": f"Đã thêm {added} từ" + (f", bỏ qua {duplicates} từ trùng" if duplicates else "") + (f", {errors} lỗi" if errors else ""),
+            "added": added,
+            "duplicates": duplicates,
+            "errors": errors
+        }
+
+    except Exception as e:
+        db.rollback()
+        return {
+            "success": False,
+            "message": f"Lỗi: {str(e)}",
+            "added": 0,
+            "duplicates": 0,
+            "errors": 1
+        }
 
 
 @import_router.post("/vocabulary/csv")

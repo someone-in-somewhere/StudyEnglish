@@ -1254,39 +1254,24 @@ Your translation:`;
                     return;
                 }
 
-                let addedCount = 0;
-                let skippedCount = 0;
+                // Call the direct import endpoint with all vocabulary at once
+                const response = await fetchAPI('/import/vocabulary/direct', {
+                    method: 'POST',
+                    body: JSON.stringify({ vocabulary: vocabList })
+                });
 
-                for (const item of vocabList) {
-                    if (!item.word || !item.meaning_vi) continue;
-
-                    try {
-                        const response = await fetchAPI('/vocabulary', {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                word: item.word.trim(),
-                                meaning: item.meaning_vi.trim(),
-                                part_of_speech: item.part_of_speech || '',
-                                example: item.example || ''
-                            })
-                        });
-
-                        if (response.success) {
-                            addedCount++;
-                        } else {
-                            skippedCount++;
-                        }
-                    } catch (err) {
-                        skippedCount++;
+                if (response.success) {
+                    this.vocabSaveResult = response.message;
+                    this.vocabSaveSuccess = response.added > 0;
+                    if (response.added > 0) {
+                        this.vocabJson = '';
+                        // Refresh global stats
+                        Alpine.store('app')?.loadStats?.();
                     }
+                } else {
+                    this.vocabSaveResult = response.message || 'Có lỗi xảy ra';
+                    this.vocabSaveSuccess = false;
                 }
-
-                this.vocabSaveResult = `Đã thêm ${addedCount} từ${skippedCount > 0 ? `, bỏ qua ${skippedCount} từ (trùng/lỗi)` : ''}`;
-                this.vocabSaveSuccess = addedCount > 0;
-                this.vocabJson = '';
-
-                // Refresh global stats
-                Alpine.store('app')?.loadStats?.();
             } catch (error) {
                 console.error('Failed to parse vocab JSON:', error);
                 this.vocabSaveResult = 'Lỗi: JSON không hợp lệ';
@@ -1567,39 +1552,24 @@ START the conversation now! Greet me and ask an opening question about "${this.c
                     return;
                 }
 
-                let addedCount = 0;
-                let skippedCount = 0;
+                // Call the direct import endpoint with all vocabulary at once
+                const response = await fetchAPI('/import/vocabulary/direct', {
+                    method: 'POST',
+                    body: JSON.stringify({ vocabulary: vocabList })
+                });
 
-                for (const item of vocabList) {
-                    if (!item.word || !item.meaning_vi) continue;
-
-                    try {
-                        const response = await fetchAPI('/vocabulary', {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                word: item.word.trim(),
-                                meaning: item.meaning_vi.trim(),
-                                part_of_speech: item.part_of_speech || '',
-                                example: item.example || ''
-                            })
-                        });
-
-                        if (response.success) {
-                            addedCount++;
-                        } else {
-                            skippedCount++;
-                        }
-                    } catch (err) {
-                        skippedCount++;
+                if (response.success) {
+                    this.vocabSaveResult = response.message;
+                    this.vocabSaveSuccess = response.added > 0;
+                    if (response.added > 0) {
+                        this.vocabJson = '';
+                        // Refresh global stats
+                        Alpine.store('app')?.loadStats?.();
                     }
+                } else {
+                    this.vocabSaveResult = response.message || 'Có lỗi xảy ra';
+                    this.vocabSaveSuccess = false;
                 }
-
-                this.vocabSaveResult = `Đã thêm ${addedCount} từ${skippedCount > 0 ? `, bỏ qua ${skippedCount} từ (trùng/lỗi)` : ''}`;
-                this.vocabSaveSuccess = addedCount > 0;
-                this.vocabJson = '';
-
-                // Refresh global stats
-                Alpine.store('app')?.loadStats?.();
             } catch (error) {
                 console.error('Failed to parse vocab JSON:', error);
                 this.vocabSaveResult = 'Lỗi: JSON không hợp lệ';
