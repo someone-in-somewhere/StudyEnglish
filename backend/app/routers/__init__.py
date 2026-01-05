@@ -16,6 +16,7 @@ from app.routers.topics import router as topics_router
 from app.routers.practice import router as practice_router
 from app.routers.recommendations import router as recommendations_router
 from app.routers.export_import import router as export_import_router
+from app.routers.export_import import import_router
 from app.routers.analytics import router as analytics_router
 
 __all__ = [
@@ -35,5 +36,6 @@ __all__ = [
     "practice_router",
     "recommendations_router",
     "export_import_router",
+    "import_router",
     "analytics_router",
 ]

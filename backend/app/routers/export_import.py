@@ -491,5 +491,4 @@ async def import_vocabulary_csv(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Combine routers
-router.include_router(import_router, prefix="", tags=["import"])
+# Note: import_router is exported separately and registered directly in main.py
