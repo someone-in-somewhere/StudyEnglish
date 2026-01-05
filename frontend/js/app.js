@@ -1216,11 +1216,18 @@ TASK: Create a translation practice exercise following these requirements:
    At the very end, provide a JSON array of new vocabulary for me to add to my learning list:
    \`\`\`json
    [
-     {"word": "example", "meaning_vi": "ví dụ", "part_of_speech": "noun", "example": "This is an example sentence."},
-     {"word": "practice", "meaning_vi": "luyện tập", "part_of_speech": "verb", "example": "I practice English every day."}
+     {
+       "word": "collaborate",
+       "meaning_vi": "hợp tác, cộng tác",
+       "pronunciation": "/kəˈlæbəreɪt/",
+       "part_of_speech": "verb",
+       "example_en": "We need to collaborate with other teams.",
+       "example_vi": "Chúng ta cần hợp tác với các đội khác.",
+       "synonyms": "cooperate, work together"
+     }
    ]
    \`\`\`
-   Include 10-15 important words from this exercise. Each word must have: word, meaning_vi (Vietnamese meaning), part_of_speech (noun/verb/adjective/adverb/etc.), and example sentence.
+   Include 10-15 important words from this exercise. Each word MUST have all fields: word, meaning_vi, pronunciation (IPA format), part_of_speech, example_en, example_vi, synonyms.
 
 START by generating the ${sourceLang} passage about "${this.practiceTopic}" (${length}, ${complexityDesc}) and present the FIRST sentence for me to translate.
 
@@ -1518,11 +1525,18 @@ JSON VOCABULARY OUTPUT:
 At the very end, provide a JSON array of new vocabulary for me to add to my learning list:
 \`\`\`json
 [
-  {"word": "example", "meaning_vi": "ví dụ", "part_of_speech": "noun", "example": "This is an example sentence."},
-  {"word": "practice", "meaning_vi": "luyện tập", "part_of_speech": "verb", "example": "I practice English every day."}
+  {
+    "word": "collaborate",
+    "meaning_vi": "hợp tác, cộng tác",
+    "pronunciation": "/kəˈlæbəreɪt/",
+    "part_of_speech": "verb",
+    "example_en": "We need to collaborate with other teams.",
+    "example_vi": "Chúng ta cần hợp tác với các đội khác.",
+    "synonyms": "cooperate, work together"
+  }
 ]
 \`\`\`
-Include 10-15 important words from our conversation. Each word must have: word, meaning_vi (Vietnamese meaning), part_of_speech (noun/verb/adjective/adverb/etc.), and example sentence.
+Include 10-15 important words from our conversation. Each word MUST have all fields: word, meaning_vi, pronunciation (IPA format), part_of_speech, example_en, example_vi, synonyms.
 
 START the conversation now! Greet me and ask an opening question about "${this.chatTopic}".
 
