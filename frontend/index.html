@@ -1078,8 +1078,8 @@
 
                             <!-- Save Score Section -->
                             <div class="mt-4 pt-4 border-t">
-                                <h4 class="text-sm font-semibold mb-3">Sau khi học xong, nhập điểm để lưu lịch sử:</h4>
-                                <div class="flex items-center gap-4">
+                                <h4 class="text-sm font-semibold mb-3">Sau khi học xong, nhập điểm và từ vựng mới:</h4>
+                                <div class="flex items-center gap-4 mb-3">
                                     <div class="flex items-center gap-2">
                                         <label class="text-sm text-gray-600">Điểm (0-10):</label>
                                         <input type="number" x-model="practiceScore" min="0" max="10" step="0.1"
@@ -1091,6 +1091,25 @@
                                             class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
                                         <i class="fas fa-plus mr-1"></i>Thêm vào lịch sử
                                     </button>
+                                </div>
+
+                                <!-- JSON Vocabulary Input -->
+                                <div class="mt-3">
+                                    <label class="text-sm text-gray-600 block mb-2">
+                                        <i class="fas fa-book mr-1"></i>Từ vựng mới (paste JSON từ AI):
+                                    </label>
+                                    <textarea x-model="vocabJson"
+                                              class="w-full h-32 px-3 py-2 border rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent"
+                                              placeholder='[{"word": "example", "meaning_vi": "ví dụ", "part_of_speech": "noun", "example": "This is an example."}]'></textarea>
+                                    <div class="flex items-center gap-2 mt-2">
+                                        <button @click="parseAndSaveVocab"
+                                                :disabled="!vocabJson"
+                                                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm">
+                                            <i class="fas fa-save mr-1"></i>Lưu từ vựng mới
+                                        </button>
+                                        <span x-show="vocabSaveResult" x-text="vocabSaveResult"
+                                              class="text-sm" :class="vocabSaveSuccess ? 'text-green-600' : 'text-red-600'"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1362,6 +1381,25 @@
                                             class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
                                         <i class="fas fa-plus mr-1"></i>Thêm vào lịch sử
                                     </button>
+                                </div>
+
+                                <!-- JSON Vocabulary Input -->
+                                <div class="mt-3">
+                                    <label class="text-sm text-gray-600 block mb-2">
+                                        <i class="fas fa-book mr-1"></i>Từ vựng mới (paste JSON từ AI):
+                                    </label>
+                                    <textarea x-model="vocabJson"
+                                              class="w-full h-32 px-3 py-2 border rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent"
+                                              placeholder='[{"word": "example", "meaning_vi": "ví dụ", "part_of_speech": "noun", "example": "This is an example."}]'></textarea>
+                                    <div class="flex items-center gap-2 mt-2">
+                                        <button @click="parseAndSaveVocab"
+                                                :disabled="!vocabJson"
+                                                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm">
+                                            <i class="fas fa-save mr-1"></i>Lưu từ vựng mới
+                                        </button>
+                                        <span x-show="vocabSaveResult" x-text="vocabSaveResult"
+                                              class="text-sm" :class="vocabSaveSuccess ? 'text-green-600' : 'text-red-600'"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

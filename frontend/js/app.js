@@ -1019,6 +1019,10 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
         topicStats: [],
         showTopicStats: false,
         topicStatsLoading: false,
+        // JSON Vocabulary
+        vocabJson: '',
+        vocabSaveResult: '',
+        vocabSaveSuccess: false,
 
         async init() {
             await Promise.all([
@@ -1200,6 +1204,16 @@ TASK: Create a translation practice exercise following these requirements:
    - ✅ What I did well
    - 📚 Vocabulary to Remember: 10-15 important words/phrases with meanings and examples
 
+5. JSON VOCABULARY OUTPUT:
+   At the very end, provide a JSON array of new vocabulary for me to add to my learning list:
+   \`\`\`json
+   [
+     {"word": "example", "meaning_vi": "ví dụ", "part_of_speech": "noun", "example": "This is an example sentence."},
+     {"word": "practice", "meaning_vi": "luyện tập", "part_of_speech": "verb", "example": "I practice English every day."}
+   ]
+   \`\`\`
+   Include 10-15 important words from this exercise. Each word must have: word, meaning_vi (Vietnamese meaning), part_of_speech (noun/verb/adjective/adverb/etc.), and example sentence.
+
 START by generating the ${sourceLang} passage about "${this.practiceTopic}" (${length}, ${complexityDesc}) and present the FIRST sentence for me to translate.
 
 Format:
@@ -1212,6 +1226,64 @@ Your translation:`;
         copyPracticePrompt() {
             navigator.clipboard.writeText(this.practicePrompt);
             Alpine.store('app')?.showToast?.('Prompt copied to clipboard!', 'success');
+        },
+
+        async parseAndSaveVocab() {
+            if (!this.vocabJson) return;
+
+            try {
+                // Extract JSON from code block if present
+                let jsonStr = this.vocabJson.trim();
+                const jsonMatch = jsonStr.match(/```json\s*([\s\S]*?)```/);
+                if (jsonMatch) {
+                    jsonStr = jsonMatch[1].trim();
+                }
+
+                const vocabList = JSON.parse(jsonStr);
+                if (!Array.isArray(vocabList) || vocabList.length === 0) {
+                    this.vocabSaveResult = 'Không có từ vựng hợp lệ trong JSON';
+                    this.vocabSaveSuccess = false;
+                    return;
+                }
+
+                let addedCount = 0;
+                let skippedCount = 0;
+
+                for (const item of vocabList) {
+                    if (!item.word || !item.meaning_vi) continue;
+
+                    try {
+                        const response = await fetchAPI('/vocabulary', {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                word: item.word.trim(),
+                                meaning: item.meaning_vi.trim(),
+                                part_of_speech: item.part_of_speech || '',
+                                example: item.example || ''
+                            })
+                        });
+
+                        if (response.success) {
+                            addedCount++;
+                        } else {
+                            skippedCount++;
+                        }
+                    } catch (err) {
+                        skippedCount++;
+                    }
+                }
+
+                this.vocabSaveResult = `Đã thêm ${addedCount} từ${skippedCount > 0 ? `, bỏ qua ${skippedCount} từ (trùng/lỗi)` : ''}`;
+                this.vocabSaveSuccess = addedCount > 0;
+                this.vocabJson = '';
+
+                // Refresh global stats
+                Alpine.store('app')?.loadStats?.();
+            } catch (error) {
+                console.error('Failed to parse vocab JSON:', error);
+                this.vocabSaveResult = 'Lỗi: JSON không hợp lệ';
+                this.vocabSaveSuccess = false;
+            }
         }
     }));
 
@@ -1228,6 +1300,10 @@ Your translation:`;
         topicStats: [],
         showTopicStats: false,
         topicStatsLoading: false,
+        // JSON Vocabulary
+        vocabJson: '',
+        vocabSaveResult: '',
+        vocabSaveSuccess: false,
 
         styleNames: {
             'casual': 'Casual',
@@ -1437,6 +1513,16 @@ Provide "📊 FINAL ASSESSMENT":
 - 📚 Key Vocabulary: 10-15 useful words/phrases from our conversation (with Vietnamese translations)
 - 💡 Tips: Specific suggestions for improvement
 
+JSON VOCABULARY OUTPUT:
+At the very end, provide a JSON array of new vocabulary for me to add to my learning list:
+\`\`\`json
+[
+  {"word": "example", "meaning_vi": "ví dụ", "part_of_speech": "noun", "example": "This is an example sentence."},
+  {"word": "practice", "meaning_vi": "luyện tập", "part_of_speech": "verb", "example": "I practice English every day."}
+]
+\`\`\`
+Include 10-15 important words from our conversation. Each word must have: word, meaning_vi (Vietnamese meaning), part_of_speech (noun/verb/adjective/adverb/etc.), and example sentence.
+
 START the conversation now! Greet me and ask an opening question about "${this.chatTopic}".
 
 [Exchange 1/${lengthInfo.exchanges.split('-')[1]}]`;
@@ -1445,6 +1531,64 @@ START the conversation now! Greet me and ask an opening question about "${this.c
         copyChatPrompt() {
             navigator.clipboard.writeText(this.chatPrompt);
             Alpine.store('app')?.showToast?.('Prompt copied to clipboard!', 'success');
+        },
+
+        async parseAndSaveVocab() {
+            if (!this.vocabJson) return;
+
+            try {
+                // Extract JSON from code block if present
+                let jsonStr = this.vocabJson.trim();
+                const jsonMatch = jsonStr.match(/```json\s*([\s\S]*?)```/);
+                if (jsonMatch) {
+                    jsonStr = jsonMatch[1].trim();
+                }
+
+                const vocabList = JSON.parse(jsonStr);
+                if (!Array.isArray(vocabList) || vocabList.length === 0) {
+                    this.vocabSaveResult = 'Không có từ vựng hợp lệ trong JSON';
+                    this.vocabSaveSuccess = false;
+                    return;
+                }
+
+                let addedCount = 0;
+                let skippedCount = 0;
+
+                for (const item of vocabList) {
+                    if (!item.word || !item.meaning_vi) continue;
+
+                    try {
+                        const response = await fetchAPI('/vocabulary', {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                word: item.word.trim(),
+                                meaning: item.meaning_vi.trim(),
+                                part_of_speech: item.part_of_speech || '',
+                                example: item.example || ''
+                            })
+                        });
+
+                        if (response.success) {
+                            addedCount++;
+                        } else {
+                            skippedCount++;
+                        }
+                    } catch (err) {
+                        skippedCount++;
+                    }
+                }
+
+                this.vocabSaveResult = `Đã thêm ${addedCount} từ${skippedCount > 0 ? `, bỏ qua ${skippedCount} từ (trùng/lỗi)` : ''}`;
+                this.vocabSaveSuccess = addedCount > 0;
+                this.vocabJson = '';
+
+                // Refresh global stats
+                Alpine.store('app')?.loadStats?.();
+            } catch (error) {
+                console.error('Failed to parse vocab JSON:', error);
+                this.vocabSaveResult = 'Lỗi: JSON không hợp lệ';
+                this.vocabSaveSuccess = false;
+            }
         }
     }));
 
