@@ -1145,41 +1145,48 @@
                                     <table class="w-full text-sm">
                                         <thead>
                                             <tr class="bg-gray-50">
-                                                <th class="px-4 py-3 text-left font-medium text-gray-600">Chủ đề</th>
-                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Số lần</th>
-                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Điểm TB</th>
-                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Cao nhất</th>
-                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Thấp nhất</th>
-                                                <th class="px-4 py-3 text-center font-medium text-gray-600">VI→EN</th>
-                                                <th class="px-4 py-3 text-center font-medium text-gray-600">EN→VI</th>
-                                                <th class="px-4 py-3 text-left font-medium text-gray-600">Lần cuối</th>
+                                                <th class="px-3 py-3 text-left font-medium text-gray-600">Chủ đề</th>
+                                                <th class="px-2 py-3 text-center font-medium text-gray-600">Số lần</th>
+                                                <th class="px-2 py-3 text-center font-medium text-gray-600">Độ khó</th>
+                                                <th class="px-2 py-3 text-center font-medium text-gray-600">Điểm TB</th>
+                                                <th class="px-2 py-3 text-center font-medium text-gray-600" title="Điểm có trọng số theo độ khó">Điểm TĐ</th>
+                                                <th class="px-2 py-3 text-center font-medium text-gray-600">Cao nhất</th>
+                                                <th class="px-2 py-3 text-center font-medium text-gray-600">VI→EN</th>
+                                                <th class="px-2 py-3 text-center font-medium text-gray-600">EN→VI</th>
+                                                <th class="px-2 py-3 text-left font-medium text-gray-600">Lần cuối</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <template x-for="stat in topicStats" :key="stat.topic">
                                                 <tr class="border-t hover:bg-gray-50">
-                                                    <td class="px-4 py-3 font-medium" x-text="stat.topic"></td>
-                                                    <td class="px-4 py-3 text-center">
+                                                    <td class="px-3 py-3 font-medium" x-text="stat.topic"></td>
+                                                    <td class="px-2 py-3 text-center">
                                                         <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded" x-text="stat.total_sessions"></span>
                                                     </td>
-                                                    <td class="px-4 py-3 text-center">
+                                                    <td class="px-2 py-3 text-center">
+                                                        <span class="px-2 py-1 rounded text-xs font-medium"
+                                                              :class="getDifficultyColor(stat.avg_difficulty)"
+                                                              x-text="stat.difficulty_label"></span>
+                                                    </td>
+                                                    <td class="px-2 py-3 text-center">
                                                         <span class="px-2 py-1 rounded font-semibold"
                                                               :class="getScoreColor(stat.avg_score)"
                                                               x-text="stat.avg_score"></span>
                                                     </td>
-                                                    <td class="px-4 py-3 text-center">
-                                                        <span class="text-green-600 font-medium" x-text="stat.best_score"></span>
+                                                    <td class="px-2 py-3 text-center" title="Điểm có trọng số">
+                                                        <span class="px-2 py-1 rounded font-bold bg-indigo-100 text-indigo-700"
+                                                              x-text="stat.avg_weighted_score"></span>
                                                     </td>
-                                                    <td class="px-4 py-3 text-center">
-                                                        <span class="text-red-600 font-medium" x-text="stat.lowest_score"></span>
+                                                    <td class="px-2 py-3 text-center">
+                                                        <span class="text-green-600 font-medium" x-text="stat.best_weighted_score"></span>
                                                     </td>
-                                                    <td class="px-4 py-3 text-center">
+                                                    <td class="px-2 py-3 text-center">
                                                         <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs" x-text="stat.vi_to_en_count"></span>
                                                     </td>
-                                                    <td class="px-4 py-3 text-center">
+                                                    <td class="px-2 py-3 text-center">
                                                         <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs" x-text="stat.en_to_vi_count"></span>
                                                     </td>
-                                                    <td class="px-4 py-3 text-gray-500 text-xs" x-text="formatStatDate(stat.last_practiced)"></td>
+                                                    <td class="px-2 py-3 text-gray-500 text-xs" x-text="formatStatDate(stat.last_practiced)"></td>
                                                 </tr>
                                             </template>
                                         </tbody>
@@ -1187,7 +1194,7 @@
                                 </div>
 
                                 <!-- Summary -->
-                                <div x-show="!topicStatsLoading && topicStats.length > 0" class="mt-4 pt-4 border-t grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                                <div x-show="!topicStatsLoading && topicStats.length > 0" class="mt-4 pt-4 border-t grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
                                     <div>
                                         <p class="text-2xl font-bold text-primary" x-text="topicStats.length"></p>
                                         <p class="text-xs text-gray-500">Chủ đề đã học</p>
@@ -1199,10 +1206,15 @@
                                     <div>
                                         <p class="text-2xl font-bold text-green-600"
                                            x-text="(topicStats.reduce((sum, s) => sum + s.avg_score * s.total_sessions, 0) / topicStats.reduce((sum, s) => sum + s.total_sessions, 0) || 0).toFixed(1)"></p>
-                                        <p class="text-xs text-gray-500">Điểm TB chung</p>
+                                        <p class="text-xs text-gray-500">Điểm TB gốc</p>
                                     </div>
                                     <div>
-                                        <p class="text-2xl font-bold text-purple-600" x-text="Math.max(...topicStats.map(s => s.best_score))"></p>
+                                        <p class="text-2xl font-bold text-indigo-600"
+                                           x-text="(topicStats.reduce((sum, s) => sum + s.avg_weighted_score * s.total_sessions, 0) / topicStats.reduce((sum, s) => sum + s.total_sessions, 0) || 0).toFixed(1)"></p>
+                                        <p class="text-xs text-gray-500">Điểm TB trọng số</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold text-purple-600" x-text="Math.max(...topicStats.map(s => s.best_weighted_score))"></p>
                                         <p class="text-xs text-gray-500">Điểm cao nhất</p>
                                     </div>
                                 </div>
@@ -1435,35 +1447,42 @@
                                     <table class="w-full text-sm">
                                         <thead>
                                             <tr class="bg-gray-50">
-                                                <th class="px-4 py-3 text-left font-medium text-gray-600">Chủ đề</th>
-                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Số lần</th>
-                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Điểm TB</th>
-                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Cao nhất</th>
-                                                <th class="px-4 py-3 text-center font-medium text-gray-600">Thấp nhất</th>
-                                                <th class="px-4 py-3 text-left font-medium text-gray-600">Phong cách đã học</th>
-                                                <th class="px-4 py-3 text-left font-medium text-gray-600">Lần cuối</th>
+                                                <th class="px-3 py-3 text-left font-medium text-gray-600">Chủ đề</th>
+                                                <th class="px-2 py-3 text-center font-medium text-gray-600">Số lần</th>
+                                                <th class="px-2 py-3 text-center font-medium text-gray-600">Độ khó</th>
+                                                <th class="px-2 py-3 text-center font-medium text-gray-600">Điểm TB</th>
+                                                <th class="px-2 py-3 text-center font-medium text-gray-600" title="Điểm có trọng số theo độ khó">Điểm TĐ</th>
+                                                <th class="px-2 py-3 text-center font-medium text-gray-600">Cao nhất</th>
+                                                <th class="px-2 py-3 text-left font-medium text-gray-600">Phong cách đã học</th>
+                                                <th class="px-2 py-3 text-left font-medium text-gray-600">Lần cuối</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <template x-for="stat in topicStats" :key="stat.topic">
                                                 <tr class="border-t hover:bg-gray-50">
-                                                    <td class="px-4 py-3 font-medium" x-text="stat.topic"></td>
-                                                    <td class="px-4 py-3 text-center">
+                                                    <td class="px-3 py-3 font-medium" x-text="stat.topic"></td>
+                                                    <td class="px-2 py-3 text-center">
                                                         <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded" x-text="stat.total_sessions"></span>
                                                     </td>
-                                                    <td class="px-4 py-3 text-center">
+                                                    <td class="px-2 py-3 text-center">
+                                                        <span class="px-2 py-1 rounded text-xs font-medium"
+                                                              :class="getDifficultyColor(stat.avg_difficulty)"
+                                                              x-text="stat.difficulty_label"></span>
+                                                    </td>
+                                                    <td class="px-2 py-3 text-center">
                                                         <span class="px-2 py-1 rounded font-semibold"
                                                               :class="getScoreColor(stat.avg_score)"
                                                               x-text="stat.avg_score"></span>
                                                     </td>
-                                                    <td class="px-4 py-3 text-center">
-                                                        <span class="text-green-600 font-medium" x-text="stat.best_score"></span>
+                                                    <td class="px-2 py-3 text-center" title="Điểm có trọng số">
+                                                        <span class="px-2 py-1 rounded font-bold bg-indigo-100 text-indigo-700"
+                                                              x-text="stat.avg_weighted_score"></span>
                                                     </td>
-                                                    <td class="px-4 py-3 text-center">
-                                                        <span class="text-red-600 font-medium" x-text="stat.lowest_score"></span>
+                                                    <td class="px-2 py-3 text-center">
+                                                        <span class="text-green-600 font-medium" x-text="stat.best_weighted_score"></span>
                                                     </td>
-                                                    <td class="px-4 py-3 text-xs text-gray-600" x-text="getStylesList(stat.styles)"></td>
-                                                    <td class="px-4 py-3 text-gray-500 text-xs" x-text="formatStatDate(stat.last_practiced)"></td>
+                                                    <td class="px-2 py-3 text-xs text-gray-600" x-text="getStylesList(stat.styles)"></td>
+                                                    <td class="px-2 py-3 text-gray-500 text-xs" x-text="formatStatDate(stat.last_practiced)"></td>
                                                 </tr>
                                             </template>
                                         </tbody>
@@ -1471,7 +1490,7 @@
                                 </div>
 
                                 <!-- Summary -->
-                                <div x-show="!topicStatsLoading && topicStats.length > 0" class="mt-4 pt-4 border-t grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                                <div x-show="!topicStatsLoading && topicStats.length > 0" class="mt-4 pt-4 border-t grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
                                     <div>
                                         <p class="text-2xl font-bold text-primary" x-text="topicStats.length"></p>
                                         <p class="text-xs text-gray-500">Chủ đề đã học</p>
@@ -1483,10 +1502,15 @@
                                     <div>
                                         <p class="text-2xl font-bold text-green-600"
                                            x-text="(topicStats.reduce((sum, s) => sum + s.avg_score * s.total_sessions, 0) / topicStats.reduce((sum, s) => sum + s.total_sessions, 0) || 0).toFixed(1)"></p>
-                                        <p class="text-xs text-gray-500">Điểm TB chung</p>
+                                        <p class="text-xs text-gray-500">Điểm TB gốc</p>
                                     </div>
                                     <div>
-                                        <p class="text-2xl font-bold text-purple-600" x-text="Math.max(...topicStats.map(s => s.best_score))"></p>
+                                        <p class="text-2xl font-bold text-indigo-600"
+                                           x-text="(topicStats.reduce((sum, s) => sum + s.avg_weighted_score * s.total_sessions, 0) / topicStats.reduce((sum, s) => sum + s.total_sessions, 0) || 0).toFixed(1)"></p>
+                                        <p class="text-xs text-gray-500">Điểm TB trọng số</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold text-purple-600" x-text="Math.max(...topicStats.map(s => s.best_weighted_score))"></p>
                                         <p class="text-xs text-gray-500">Điểm cao nhất</p>
                                     </div>
                                 </div>

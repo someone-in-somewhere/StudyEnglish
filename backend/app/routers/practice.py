@@ -10,6 +10,12 @@ from datetime import datetime, timedelta
 
 from app.database import get_sync_session
 from app.models.db_models import TranslationPractice, ConversationPractice
+from app.utils.weights import (
+    calculate_translation_difficulty,
+    calculate_conversation_difficulty,
+    calculate_weighted_score,
+    get_difficulty_label
+)
 
 router = APIRouter(prefix="/api/practice", tags=["practice"])
 
@@ -105,42 +111,60 @@ def get_translation_stats(db: Session = Depends(get_sync_session)):
 
 @router.get("/translation/topic-stats")
 def get_translation_topic_stats(db: Session = Depends(get_sync_session)):
-    """Get translation practice statistics grouped by topic."""
-    # Get all practices grouped by topic
-    topic_stats = db.query(
-        TranslationPractice.topic,
-        func.count(TranslationPractice.id).label('count'),
-        func.avg(TranslationPractice.score).label('avg_score'),
-        func.max(TranslationPractice.score).label('best_score'),
-        func.min(TranslationPractice.score).label('lowest_score'),
-        func.max(TranslationPractice.practiced_at).label('last_practiced')
-    ).group_by(TranslationPractice.topic).all()
+    """Get translation practice statistics grouped by topic with weighted scores."""
+    # Get all practices for detailed calculation
+    all_practices = db.query(TranslationPractice).all()
 
-    # Get direction stats per topic
-    direction_stats = db.query(
-        TranslationPractice.topic,
-        TranslationPractice.direction,
-        func.count(TranslationPractice.id).label('count')
-    ).group_by(TranslationPractice.topic, TranslationPractice.direction).all()
+    # Group by topic and calculate weighted scores
+    topic_data = {}
+    for p in all_practices:
+        if p.topic not in topic_data:
+            topic_data[p.topic] = {
+                "practices": [],
+                "directions": {"vi_to_en": 0, "en_to_vi": 0}
+            }
 
-    # Build direction map
-    direction_map = {}
-    for stat in direction_stats:
-        if stat.topic not in direction_map:
-            direction_map[stat.topic] = {'vi_to_en': 0, 'en_to_vi': 0}
-        direction_map[stat.topic][stat.direction] = stat.count
+        # Calculate difficulty and weighted score
+        difficulty = calculate_translation_difficulty(
+            p.level or "B1",
+            p.direction or "vi_to_en",
+            p.length or "medium",
+            p.complexity or "compound"
+        )
+        weighted = calculate_weighted_score(p.score, difficulty)
+
+        topic_data[p.topic]["practices"].append({
+            "raw_score": p.score,
+            "weighted_score": weighted,
+            "difficulty": difficulty,
+            "practiced_at": p.practiced_at
+        })
+
+        if p.direction in topic_data[p.topic]["directions"]:
+            topic_data[p.topic]["directions"][p.direction] += 1
 
     result = []
-    for stat in topic_stats:
+    for topic, data in topic_data.items():
+        practices = data["practices"]
+        raw_scores = [p["raw_score"] for p in practices]
+        weighted_scores = [p["weighted_score"] for p in practices]
+        difficulties = [p["difficulty"] for p in practices]
+
+        avg_difficulty = sum(difficulties) / len(difficulties) if difficulties else 1.0
+
         result.append({
-            "topic": stat.topic,
-            "total_sessions": stat.count,
-            "avg_score": round(float(stat.avg_score or 0), 1),
-            "best_score": round(float(stat.best_score or 0), 1),
-            "lowest_score": round(float(stat.lowest_score or 0), 1),
-            "last_practiced": stat.last_practiced.isoformat() if stat.last_practiced else None,
-            "vi_to_en_count": direction_map.get(stat.topic, {}).get('vi_to_en', 0),
-            "en_to_vi_count": direction_map.get(stat.topic, {}).get('en_to_vi', 0)
+            "topic": topic,
+            "total_sessions": len(practices),
+            "avg_score": round(sum(raw_scores) / len(raw_scores), 1) if raw_scores else 0,
+            "avg_weighted_score": round(sum(weighted_scores) / len(weighted_scores), 1) if weighted_scores else 0,
+            "best_score": round(max(raw_scores), 1) if raw_scores else 0,
+            "best_weighted_score": round(max(weighted_scores), 1) if weighted_scores else 0,
+            "lowest_score": round(min(raw_scores), 1) if raw_scores else 0,
+            "avg_difficulty": round(avg_difficulty, 2),
+            "difficulty_label": get_difficulty_label(avg_difficulty),
+            "last_practiced": max(p["practiced_at"] for p in practices).isoformat() if practices else None,
+            "vi_to_en_count": data["directions"]["vi_to_en"],
+            "en_to_vi_count": data["directions"]["en_to_vi"]
         })
 
     # Sort by total sessions descending
@@ -243,41 +267,59 @@ def get_conversation_stats(db: Session = Depends(get_sync_session)):
 
 @router.get("/conversation/topic-stats")
 def get_conversation_topic_stats(db: Session = Depends(get_sync_session)):
-    """Get conversation practice statistics grouped by topic."""
-    # Get all practices grouped by topic
-    topic_stats = db.query(
-        ConversationPractice.topic,
-        func.count(ConversationPractice.id).label('count'),
-        func.avg(ConversationPractice.score).label('avg_score'),
-        func.max(ConversationPractice.score).label('best_score'),
-        func.min(ConversationPractice.score).label('lowest_score'),
-        func.max(ConversationPractice.practiced_at).label('last_practiced')
-    ).group_by(ConversationPractice.topic).all()
+    """Get conversation practice statistics grouped by topic with weighted scores."""
+    # Get all practices for detailed calculation
+    all_practices = db.query(ConversationPractice).all()
 
-    # Get style stats per topic
-    style_stats = db.query(
-        ConversationPractice.topic,
-        ConversationPractice.style,
-        func.count(ConversationPractice.id).label('count')
-    ).group_by(ConversationPractice.topic, ConversationPractice.style).all()
+    # Group by topic and calculate weighted scores
+    topic_data = {}
+    for p in all_practices:
+        if p.topic not in topic_data:
+            topic_data[p.topic] = {
+                "practices": [],
+                "styles": {}
+            }
 
-    # Build style map
-    style_map = {}
-    for stat in style_stats:
-        if stat.topic not in style_map:
-            style_map[stat.topic] = {}
-        style_map[stat.topic][stat.style] = stat.count
+        # Calculate difficulty and weighted score
+        difficulty = calculate_conversation_difficulty(
+            p.level or "B1",
+            p.style or "formal",
+            p.length or "medium"
+        )
+        weighted = calculate_weighted_score(p.score, difficulty)
+
+        topic_data[p.topic]["practices"].append({
+            "raw_score": p.score,
+            "weighted_score": weighted,
+            "difficulty": difficulty,
+            "practiced_at": p.practiced_at
+        })
+
+        # Count styles
+        if p.style:
+            topic_data[p.topic]["styles"][p.style] = topic_data[p.topic]["styles"].get(p.style, 0) + 1
 
     result = []
-    for stat in topic_stats:
+    for topic, data in topic_data.items():
+        practices = data["practices"]
+        raw_scores = [p["raw_score"] for p in practices]
+        weighted_scores = [p["weighted_score"] for p in practices]
+        difficulties = [p["difficulty"] for p in practices]
+
+        avg_difficulty = sum(difficulties) / len(difficulties) if difficulties else 1.0
+
         result.append({
-            "topic": stat.topic,
-            "total_sessions": stat.count,
-            "avg_score": round(float(stat.avg_score or 0), 1),
-            "best_score": round(float(stat.best_score or 0), 1),
-            "lowest_score": round(float(stat.lowest_score or 0), 1),
-            "last_practiced": stat.last_practiced.isoformat() if stat.last_practiced else None,
-            "styles": style_map.get(stat.topic, {})
+            "topic": topic,
+            "total_sessions": len(practices),
+            "avg_score": round(sum(raw_scores) / len(raw_scores), 1) if raw_scores else 0,
+            "avg_weighted_score": round(sum(weighted_scores) / len(weighted_scores), 1) if weighted_scores else 0,
+            "best_score": round(max(raw_scores), 1) if raw_scores else 0,
+            "best_weighted_score": round(max(weighted_scores), 1) if weighted_scores else 0,
+            "lowest_score": round(min(raw_scores), 1) if raw_scores else 0,
+            "avg_difficulty": round(avg_difficulty, 2),
+            "difficulty_label": get_difficulty_label(avg_difficulty),
+            "last_practiced": max(p["practiced_at"] for p in practices).isoformat() if practices else None,
+            "styles": data["styles"]
         })
 
     # Sort by total sessions descending

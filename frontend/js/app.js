@@ -1051,6 +1051,14 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
             return 'text-red-600 bg-red-100';
         },
 
+        getDifficultyColor(difficulty) {
+            if (difficulty < 0.75) return 'bg-green-100 text-green-700';
+            if (difficulty < 0.95) return 'bg-blue-100 text-blue-700';
+            if (difficulty <= 1.05) return 'bg-gray-100 text-gray-700';
+            if (difficulty <= 1.25) return 'bg-orange-100 text-orange-700';
+            return 'bg-red-100 text-red-700';
+        },
+
         formatStatDate(isoDate) {
             if (!isoDate) return '-';
             const date = new Date(isoDate);
@@ -1344,6 +1352,14 @@ Your translation:`;
             if (score >= 8) return 'text-green-600 bg-green-100';
             if (score >= 6) return 'text-yellow-600 bg-yellow-100';
             return 'text-red-600 bg-red-100';
+        },
+
+        getDifficultyColor(difficulty) {
+            if (difficulty < 0.75) return 'bg-green-100 text-green-700';
+            if (difficulty < 0.95) return 'bg-blue-100 text-blue-700';
+            if (difficulty <= 1.05) return 'bg-gray-100 text-gray-700';
+            if (difficulty <= 1.25) return 'bg-orange-100 text-orange-700';
+            return 'bg-red-100 text-red-700';
         },
 
         formatStatDate(isoDate) {
