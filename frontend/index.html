@@ -1066,14 +1066,8 @@
                                     Prompt for Translation Practice
                                 </h3>
                                 <button @click="copyPracticePrompt()"
-                                        class="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
-                                        :class="promptCopied ? 'bg-green-500 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'">
-                                    <template x-if="!promptCopied">
-                                        <span class="flex items-center"><i class="fas fa-copy mr-2"></i>Copy Prompt</span>
-                                    </template>
-                                    <template x-if="promptCopied">
-                                        <span class="flex items-center"><i class="fas fa-check mr-2"></i>Copied!</span>
-                                    </template>
+                                        class="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gray-100 hover:bg-gray-200 text-gray-700">
+                                    <i class="fas fa-copy mr-2"></i>Copy Prompt
                                 </button>
                             </div>
                             <textarea readonly
@@ -1375,14 +1369,8 @@
                                     Prompt for Conversation Practice
                                 </h3>
                                 <button @click="copyChatPrompt()"
-                                        class="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
-                                        :class="chatPromptCopied ? 'bg-green-500 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'">
-                                    <template x-if="!chatPromptCopied">
-                                        <span class="flex items-center"><i class="fas fa-copy mr-2"></i>Copy Prompt</span>
-                                    </template>
-                                    <template x-if="chatPromptCopied">
-                                        <span class="flex items-center"><i class="fas fa-check mr-2"></i>Copied!</span>
-                                    </template>
+                                        class="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gray-100 hover:bg-gray-200 text-gray-700">
+                                    <i class="fas fa-copy mr-2"></i>Copy Prompt
                                 </button>
                             </div>
                             <textarea readonly
