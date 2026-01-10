@@ -7,20 +7,7 @@
     <fragment
         android:id="@+id/vocabularyFragment"
         android:name="com.studyenglish.ui.vocabulary.VocabularyFragment"
-        android:label="@string/nav_vocabulary">
-        <action
-            android:id="@+id/action_vocabulary_to_detail"
-            app:destination="@id/vocabularyDetailFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/vocabularyDetailFragment"
-        android:name="com.studyenglish.ui.vocabulary.VocabularyDetailFragment"
-        android:label="Chi tiết từ vựng">
-        <argument
-            android:name="vocabularyId"
-            app:argType="string" />
-    </fragment>
+        android:label="@string/nav_vocabulary" />
 
     <fragment
         android:id="@+id/quizFragment"
