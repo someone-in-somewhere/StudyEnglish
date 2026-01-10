@@ -1361,12 +1361,21 @@ Format:
 Your translation:`;
         },
 
-        copyPracticePrompt() {
+        copyPracticePrompt(event) {
             navigator.clipboard.writeText(this.practicePrompt);
-            this.promptCopied = true;
             Alpine.store('app')?.showToast?.('Đã copy prompt!', 'success');
+
+            // Visual feedback on button
+            const btn = event.currentTarget;
+            const originalHTML = btn.innerHTML;
+            const originalClass = btn.className;
+
+            btn.innerHTML = '<i class="fas fa-check mr-2"></i><span>Copied!</span>';
+            btn.className = btn.className.replace('bg-gray-100', 'bg-green-500').replace('hover:bg-gray-200', '').replace('text-gray-700', 'text-white');
+
             setTimeout(() => {
-                this.promptCopied = false;
+                btn.innerHTML = originalHTML;
+                btn.className = originalClass;
             }, 2000);
         },
 
@@ -1688,12 +1697,21 @@ START the conversation now! Greet me and ask an opening question about "${this.c
 [Exchange 1/${lengthInfo.exchanges.split('-')[1]}]`;
         },
 
-        copyChatPrompt() {
+        copyChatPrompt(event) {
             navigator.clipboard.writeText(this.chatPrompt);
-            this.chatPromptCopied = true;
             Alpine.store('app')?.showToast?.('Đã copy prompt!', 'success');
+
+            // Visual feedback on button
+            const btn = event.currentTarget;
+            const originalHTML = btn.innerHTML;
+            const originalClass = btn.className;
+
+            btn.innerHTML = '<i class="fas fa-check mr-2"></i><span>Copied!</span>';
+            btn.className = btn.className.replace('bg-gray-100', 'bg-green-500').replace('hover:bg-gray-200', '').replace('text-gray-700', 'text-white');
+
             setTimeout(() => {
-                this.chatPromptCopied = false;
+                btn.innerHTML = originalHTML;
+                btn.className = originalClass;
             }, 2000);
         },
 

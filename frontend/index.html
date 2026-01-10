@@ -1065,12 +1065,10 @@
                                     <i class="fas fa-clipboard mr-2"></i>
                                     Prompt for Translation Practice
                                 </h3>
-                                <button @click="copyPracticePrompt()"
-                                        class="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gray-100 hover:bg-gray-200 text-gray-700"
-                                        x-bind:class="promptCopied && 'bg-green-500 text-white hover:bg-green-500'">
-                                    <i class="fas fa-copy mr-2" x-bind:class="promptCopied && 'fa-check'"></i>
+                                <button @click="copyPracticePrompt($event)"
+                                        class="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gray-100 hover:bg-gray-200 text-gray-700">
+                                    <i class="fas fa-copy mr-2"></i>
                                     <span>Copy Prompt</span>
-                                    <span x-show="promptCopied" class="ml-1">✓</span>
                                 </button>
                             </div>
                             <textarea readonly
@@ -1371,12 +1369,10 @@
                                     <i class="fas fa-clipboard mr-2"></i>
                                     Prompt for Conversation Practice
                                 </h3>
-                                <button @click="copyChatPrompt()"
-                                        class="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gray-100 hover:bg-gray-200 text-gray-700"
-                                        x-bind:class="chatPromptCopied && 'bg-green-500 text-white hover:bg-green-500'">
-                                    <i class="fas fa-copy mr-2" x-bind:class="chatPromptCopied && 'fa-check'"></i>
+                                <button @click="copyChatPrompt($event)"
+                                        class="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gray-100 hover:bg-gray-200 text-gray-700">
+                                    <i class="fas fa-copy mr-2"></i>
                                     <span>Copy Prompt</span>
-                                    <span x-show="chatPromptCopied" class="ml-1">✓</span>
                                 </button>
                             </div>
                             <textarea readonly
