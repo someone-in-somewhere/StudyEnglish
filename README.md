@@ -1,6 +1,67 @@
 # StudyEnglish - Offline English Learning Application
 
-A comprehensive, 100% offline English learning platform with local AI models. This desktop web application provides vocabulary learning, quizzes, translation, reading comprehension, writing practice, and more - all running locally without internet connection.
+A comprehensive, 100% offline English learning platform with local AI models. Available for both **Web** and **Android** platforms.
+
+## Project Structure
+
+```
+StudyEnglish/
+├── web/                    # 🌐 Phiên bản Web
+│   ├── backend/            # FastAPI backend (Python)
+│   │   ├── app/            # Main application
+│   │   │   ├── models/     # Database models
+│   │   │   ├── services/   # Business logic (14 services)
+│   │   │   ├── routers/    # API endpoints (18 routers)
+│   │   │   └── utils/      # Utilities
+│   │   ├── ai_models/      # Local AI models
+│   │   └── requirements.txt
+│   └── frontend/           # HTML/JS frontend
+│       ├── index.html
+│       └── js/app.js
+│
+├── android/                # 📱 Phiên bản Android
+│   ├── app/                # Android app module
+│   │   ├── src/main/
+│   │   │   ├── java/       # Java source code
+│   │   │   ├── res/        # Resources (layouts, values)
+│   │   │   └── AndroidManifest.xml
+│   │   └── build.gradle
+│   ├── build.gradle
+│   └── settings.gradle
+│
+├── shared/                 # 🔗 Code dùng chung
+│   ├── config.json         # App configuration
+│   └── constants.js        # Shared constants
+│
+└── README.md
+```
+
+## Platforms
+
+### 🌐 Web Version
+Desktop web application chạy trên trình duyệt.
+
+**Xem chi tiết:** [web/README.md](./web/README.md)
+
+```bash
+# Quick Start
+cd web/backend
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+# Truy cập: http://localhost:8000
+```
+
+### 📱 Android Version
+Ứng dụng Android APK sử dụng WebView.
+
+**Xem chi tiết:** [android/README.md](./android/README.md)
+
+```bash
+# Build APK
+cd android
+./gradlew assembleDebug
+# APK: app/build/outputs/apk/debug/app-debug.apk
+```
 
 ## Features
 
@@ -22,17 +83,29 @@ A comprehensive, 100% offline English learning platform with local AI models. Th
 
 ## Technical Stack
 
-### Backend
-- **Python 3.10+** with **FastAPI**
-- **SQLAlchemy** ORM with **SQLite** database
-- **Uvicorn** ASGI server
-- **Pydantic** for data validation
+### Backend (Python)
+| Component | Technology |
+|-----------|------------|
+| Framework | FastAPI |
+| Database | SQLite + SQLAlchemy |
+| Server | Uvicorn |
+| Validation | Pydantic |
 
-### Frontend
-- **HTML5** with **Tailwind CSS**
-- **Vanilla JavaScript** with **Alpine.js** for reactivity
-- **Chart.js** for progress visualization
-- **Font Awesome** for icons
+### Frontend (Web)
+| Component | Technology |
+|-----------|------------|
+| Styling | Tailwind CSS |
+| Reactivity | Alpine.js |
+| Charts | Chart.js |
+| Icons | Font Awesome |
+
+### Android
+| Component | Technology |
+|-----------|------------|
+| Language | Java |
+| Min SDK | 24 (Android 7.0) |
+| Target SDK | 34 (Android 14) |
+| Build | Gradle 8.2 |
 
 ### AI Models (Local)
 | Model | Size | Purpose |
@@ -43,180 +116,49 @@ A comprehensive, 100% offline English learning platform with local AI models. Th
 | BGE-large-en-v1.5 | ~1.2 GB | Text embeddings and similarity |
 | paraphrase-multilingual-mpnet-base-v2 | ~420 MB | Multilingual sentence embeddings |
 
-## Installation
+## Requirements
 
-### Prerequisites
-- Python 3.10 or higher
-- pip package manager
-- 10+ GB disk space for AI models
+### Web Version
+- Python 3.10+
+- 10+ GB disk space (for AI models)
 - 8+ GB RAM recommended
+- Modern web browser
 
-### Setup
-
-1. **Clone the repository**
-```bash
-git clone <repository-url>
-cd StudyEnglish
-```
-
-2. **Create and activate virtual environment**
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. **Install dependencies**
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
-4. **Download AI Models**
-
-Create the `backend/ai_models` directory and download the required models:
-
-```bash
-mkdir -p backend/ai_models
-```
-
-**Qwen Model (GGUF format):**
-Download from HuggingFace and place in `backend/ai_models/qwen2.5-7b-instruct-q4_k_m.gguf`
-
-Other models (T5, NLLB, BGE, multilingual) will be automatically downloaded from HuggingFace on first use.
-
-5. **Initialize the database**
-```bash
-cd backend
-python -c "from app.database import init_db; init_db()"
-```
-
-6. **Run the application**
-```bash
-uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
-
-7. **Access the application**
-Open your browser and navigate to: `http://127.0.0.1:8000`
-
-## Project Structure
-
-```
-StudyEnglish/
-├── backend/
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── main.py              # FastAPI application
-│   │   ├── config.py            # Configuration settings
-│   │   ├── database.py          # Database setup
-│   │   ├── models/
-│   │   │   ├── db_models.py     # SQLAlchemy models
-│   │   │   └── schemas.py       # Pydantic schemas
-│   │   ├── services/
-│   │   │   ├── ai_model_manager.py    # AI model management
-│   │   │   ├── vocabulary_service.py  # Vocabulary logic
-│   │   │   ├── quiz_service.py        # Quiz generation
-│   │   │   ├── translation_service.py # Translation
-│   │   │   ├── progress_service.py    # Progress tracking
-│   │   │   ├── srs_service.py         # Spaced repetition
-│   │   │   ├── exercise_service.py    # Exercise generation
-│   │   │   ├── chat_service.py        # AI chatbot
-│   │   │   ├── reading_service.py     # Reading comprehension
-│   │   │   ├── writing_service.py     # Writing practice
-│   │   │   ├── flashcard_service.py   # Flashcards
-│   │   │   ├── error_analysis_service.py  # Error tracking
-│   │   │   └── learning_path_service.py   # Learning paths
-│   │   └── routers/             # API endpoints
-│   ├── ai_models/               # Local AI models directory
-│   └── requirements.txt
-├── frontend/
-│   ├── index.html              # Main HTML file
-│   ├── js/
-│   │   └── app.js              # JavaScript application
-│   ├── css/                    # Custom CSS (if needed)
-│   └── pages/                  # Additional HTML pages
-├── data/
-│   └── study_english.db        # SQLite database
-└── README.md
-```
-
-## API Endpoints
-
-### Vocabulary
-- `POST /api/vocabulary/generate` - Generate vocabulary with AI
-- `POST /api/vocabulary/mark-learned` - Mark word as learned
-- `GET /api/vocabulary/topic/{topic}` - Get vocabulary by topic
-
-### Quiz
-- `POST /api/quiz/generate` - Generate quiz
-- `POST /api/quiz/submit` - Submit quiz answers
-- `GET /api/quiz/stats` - Get quiz statistics
-
-### Translation
-- `POST /api/translation/translate` - Translate text
-- `GET /api/translation/history` - Get translation history
-
-### SRS
-- `GET /api/srs/due-reviews` - Get words due for review
-- `POST /api/srs/review` - Submit review
-- `GET /api/srs/stats` - Get SRS statistics
-
-### Chat
-- `POST /api/chat/message` - Send message to chatbot
-- `GET /api/chat/history/{session_id}` - Get chat history
-
-### And more...
-See the API documentation at `/api/docs` (when DEBUG=True)
+### Android Version
+- Android Studio Arctic Fox+
+- JDK 17
+- Android device/emulator (API 24+)
+- Backend server running
 
 ## Topics (23 Categories)
 
-**Tier 1 - Essential:**
-1. Personal and Communication
-2. Work and Business
-3. Meetings and Presentations
-4. Email and Written Communication
-5. Small Talk and Social Skills
+**Tier 1 - Essential:** Personal & Communication, Work & Business, Meetings, Email, Small Talk
 
-**Tier 2 - Professional:**
-6. Science and Technology
-7. Transportation and Travel
-8. Shopping and Money
+**Tier 2 - Professional:** Science & Tech, Transportation, Shopping
 
-**Tier 3 - Daily Life:**
-9. Everyday Life
-10. Food and Drink
-11. Entertainment and Leisure
-12. Health and Medicine
+**Tier 3 - Daily Life:** Everyday Life, Food, Entertainment, Health
 
-**Tier 4 - General:**
-13. School and Education
-14. Public Services
-15. Nature and Environment
-16. Sports and Fitness
+**Tier 4 - General:** Education, Public Services, Nature, Sports
 
-**Tier 5 - Culture:**
-17. Culture and Society
-18. Arts and Literature
-19. History and Geography
+**Tier 5 - Culture:** Culture & Society, Arts, History
 
-**Tier 6 - Specialized:**
-20. Government and Politics
-21. Law and Justice
-22. Religion and Spirituality
-23. Philosophy and Ethics
+**Tier 6 - Specialized:** Government, Law, Religion, Philosophy
 
-## Development
+## API Endpoints
 
-### Debug Mode
-Set `DEBUG=True` in environment or `.env` file to enable:
-- API documentation at `/api/docs`
-- Detailed logging
-- Hot reload
+| Category | Endpoints |
+|----------|-----------|
+| Vocabulary | `/api/vocabulary/generate`, `/api/vocabulary/mark-learned` |
+| Quiz | `/api/quiz/generate`, `/api/quiz/submit` |
+| Translation | `/api/translation/translate` |
+| SRS | `/api/srs/due-reviews`, `/api/srs/review` |
+| Chat | `/api/chat/message` |
+| Reading | `/api/reading/generate`, `/api/reading/submit` |
+| Writing | `/api/writing/submit` |
+| Flashcards | `/api/flashcards/*` |
+| Progress | `/api/progress/*` |
 
-### Testing
-```bash
-cd backend
-pytest
-```
+Full API docs: `http://localhost:8000/docs` (when DEBUG=True)
 
 ## Offline Mode
 
@@ -226,22 +168,19 @@ The application is designed to run 100% offline:
 - No external API calls required
 - Models are cached locally after first download
 
-## Performance
+## Development
 
-| Operation | Target Time |
-|-----------|-------------|
-| Vocabulary Generation | < 5 seconds |
-| Translation | < 2 seconds |
-| Quiz Generation | < 3 seconds |
-| Page Load | < 1 second |
-| Model Loading | < 30 seconds |
+### Debug Mode
+Set `DEBUG=True` in environment to enable:
+- API documentation at `/docs`
+- Detailed logging
+- Hot reload
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+### Testing
+```bash
+cd web/backend
+pytest
+```
 
 ## License
 
