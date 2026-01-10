@@ -11,14 +11,14 @@
         android:title="@string/nav_quiz" />
 
     <item
+        android:id="@+id/practiceFragment"
+        android:icon="@drawable/ic_practice"
+        android:title="@string/nav_practice" />
+
+    <item
         android:id="@+id/flashcardFragment"
         android:icon="@drawable/ic_flashcard"
         android:title="@string/nav_flashcard" />
-
-    <item
-        android:id="@+id/srsFragment"
-        android:icon="@drawable/ic_srs"
-        android:title="@string/nav_srs" />
 
     <item
         android:id="@+id/progressFragment"

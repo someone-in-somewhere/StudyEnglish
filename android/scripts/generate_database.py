@@ -174,6 +174,38 @@ def create_database():
         )
     ''')
 
+    # Conversation history for practice with external AI
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS conversation_history (
+            id TEXT PRIMARY KEY NOT NULL,
+            topic TEXT NOT NULL,
+            level TEXT NOT NULL,
+            style TEXT NOT NULL,
+            length TEXT NOT NULL,
+            context TEXT,
+            prompt TEXT,
+            score REAL DEFAULT 0,
+            newVocabulary TEXT,
+            createdAt INTEGER
+        )
+    ''')
+
+    # Translation history for practice with external AI
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS translation_history (
+            id TEXT PRIMARY KEY NOT NULL,
+            topic TEXT NOT NULL,
+            level TEXT NOT NULL,
+            direction TEXT NOT NULL,
+            complexity TEXT NOT NULL,
+            passageLength TEXT NOT NULL,
+            prompt TEXT,
+            score REAL DEFAULT 0,
+            newVocabulary TEXT,
+            createdAt INTEGER
+        )
+    ''')
+
     # Create indexes
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_vocabulary_topic ON vocabulary(topic)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_vocabulary_level ON vocabulary(level)')

@@ -49,15 +49,33 @@
             android:defaultValue="10" />
     </fragment>
 
+    <!-- Practice Menu -->
+    <fragment
+        android:id="@+id/practiceFragment"
+        android:name="com.studyenglish.ui.practice.PracticeFragment"
+        android:label="@string/nav_practice">
+        <action
+            android:id="@+id/action_practice_to_conversation"
+            app:destination="@id/conversationFragment" />
+        <action
+            android:id="@+id/action_practice_to_translation"
+            app:destination="@id/translationFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/conversationFragment"
+        android:name="com.studyenglish.ui.conversation.ConversationFragment"
+        android:label="Luyện hội thoại" />
+
+    <fragment
+        android:id="@+id/translationFragment"
+        android:name="com.studyenglish.ui.translation.TranslationPracticeFragment"
+        android:label="Luyện dịch" />
+
     <fragment
         android:id="@+id/flashcardFragment"
         android:name="com.studyenglish.ui.flashcard.FlashcardFragment"
         android:label="@string/nav_flashcard" />
-
-    <fragment
-        android:id="@+id/srsFragment"
-        android:name="com.studyenglish.ui.srs.SrsFragment"
-        android:label="@string/nav_srs" />
 
     <fragment
         android:id="@+id/progressFragment"

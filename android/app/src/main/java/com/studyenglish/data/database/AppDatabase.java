@@ -8,11 +8,15 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import com.studyenglish.data.dao.ConversationHistoryDao;
 import com.studyenglish.data.dao.ProgressDao;
 import com.studyenglish.data.dao.QuizDao;
+import com.studyenglish.data.dao.TranslationHistoryDao;
 import com.studyenglish.data.dao.VocabularyDao;
+import com.studyenglish.data.entity.ConversationHistory;
 import com.studyenglish.data.entity.Quiz;
 import com.studyenglish.data.entity.StudyProgress;
+import com.studyenglish.data.entity.TranslationHistory;
 import com.studyenglish.data.entity.Vocabulary;
 
 import java.util.concurrent.ExecutorService;
@@ -22,9 +26,11 @@ import java.util.concurrent.Executors;
     entities = {
         Vocabulary.class,
         Quiz.class,
-        StudyProgress.class
+        StudyProgress.class,
+        ConversationHistory.class,
+        TranslationHistory.class
     },
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -32,6 +38,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract VocabularyDao vocabularyDao();
     public abstract QuizDao quizDao();
     public abstract ProgressDao progressDao();
+    public abstract ConversationHistoryDao conversationHistoryDao();
+    public abstract TranslationHistoryDao translationHistoryDao();
 
     private static volatile AppDatabase INSTANCE;
     private static final int NUMBER_OF_THREADS = 4;

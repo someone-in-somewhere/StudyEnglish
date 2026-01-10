@@ -5,6 +5,7 @@
     <!-- Navigation -->
     <string name="nav_vocabulary">Từ vựng</string>
     <string name="nav_quiz">Quiz</string>
+    <string name="nav_practice">Luyện tập</string>
     <string name="nav_flashcard">Flashcard</string>
     <string name="nav_progress">Tiến độ</string>
     <string name="nav_srs">Ôn tập</string>
