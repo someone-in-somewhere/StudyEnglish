@@ -1065,7 +1065,18 @@
                                     <i class="fas fa-clipboard mr-2"></i>
                                     Prompt for Translation Practice
                                 </h3>
-                                <button @click="copyPracticePrompt($event)"
+                                <button x-ref="copyBtn1"
+                                        @click="
+                                            navigator.clipboard.writeText(practicePrompt);
+                                            $refs.copyBtn1.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-700');
+                                            $refs.copyBtn1.classList.add('bg-green-500', 'text-white');
+                                            $refs.copyBtn1.innerHTML = '<i class=\'fas fa-check mr-2\'></i><span>Copied!</span>';
+                                            setTimeout(() => {
+                                                $refs.copyBtn1.classList.remove('bg-green-500', 'text-white');
+                                                $refs.copyBtn1.classList.add('bg-gray-100', 'hover:bg-gray-200', 'text-gray-700');
+                                                $refs.copyBtn1.innerHTML = '<i class=\'fas fa-copy mr-2\'></i><span>Copy Prompt</span>';
+                                            }, 2000);
+                                        "
                                         class="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gray-100 hover:bg-gray-200 text-gray-700">
                                     <i class="fas fa-copy mr-2"></i>
                                     <span>Copy Prompt</span>
@@ -1369,7 +1380,18 @@
                                     <i class="fas fa-clipboard mr-2"></i>
                                     Prompt for Conversation Practice
                                 </h3>
-                                <button @click="copyChatPrompt($event)"
+                                <button x-ref="copyBtn2"
+                                        @click="
+                                            navigator.clipboard.writeText(chatPrompt);
+                                            $refs.copyBtn2.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-700');
+                                            $refs.copyBtn2.classList.add('bg-green-500', 'text-white');
+                                            $refs.copyBtn2.innerHTML = '<i class=\'fas fa-check mr-2\'></i><span>Copied!</span>';
+                                            setTimeout(() => {
+                                                $refs.copyBtn2.classList.remove('bg-green-500', 'text-white');
+                                                $refs.copyBtn2.classList.add('bg-gray-100', 'hover:bg-gray-200', 'text-gray-700');
+                                                $refs.copyBtn2.innerHTML = '<i class=\'fas fa-copy mr-2\'></i><span>Copy Prompt</span>';
+                                            }, 2000);
+                                        "
                                         class="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gray-100 hover:bg-gray-200 text-gray-700">
                                     <i class="fas fa-copy mr-2"></i>
                                     <span>Copy Prompt</span>
