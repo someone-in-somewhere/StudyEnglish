@@ -36,6 +36,113 @@ function speakWord(word) {
     }
 }
 
+// Randomization helpers for varied AI content generation
+function getRandomItems(arr, count = 1) {
+    const shuffled = [...arr].sort(() => Math.random() - 0.5);
+    return count === 1 ? shuffled[0] : shuffled.slice(0, count);
+}
+
+function generateVariationSeed() {
+    return Math.floor(Math.random() * 10000);
+}
+
+// Random elements for Translation Practice
+const TRANSLATION_TONES = [
+    'narrative (tell a story)',
+    'descriptive (paint a vivid picture)',
+    'informative (share facts and information)',
+    'persuasive (convince or argue a point)',
+    'reflective (share thoughts and feelings)',
+    'instructional (explain how to do something)'
+];
+
+const TRANSLATION_FOCUS = [
+    'temporal expressions and time references',
+    'cause and effect relationships',
+    'comparisons and contrasts',
+    'opinions and preferences',
+    'hypothetical situations and conditionals',
+    'descriptions of people and places',
+    'sequences of events and processes',
+    'problems and solutions'
+];
+
+const TRANSLATION_PERSPECTIVES = [
+    'first person (I/we)',
+    'second person (you)',
+    'third person (he/she/they)'
+];
+
+// Random elements for Conversation Practice
+const CONVERSATION_PERSONALITIES = [
+    'friendly and encouraging',
+    'curious and inquisitive',
+    'professional and polite',
+    'enthusiastic and energetic',
+    'thoughtful and reflective',
+    'humorous and light-hearted'
+];
+
+const CONVERSATION_CHALLENGES = [
+    'Try to use at least 2-3 idiomatic expressions during our chat.',
+    'Practice expressing agreement and polite disagreement.',
+    'Focus on using a variety of linking words and transitions.',
+    'Try to ask me follow-up questions to show active listening.',
+    'Practice paraphrasing - try to rephrase ideas in different ways.',
+    'Focus on using descriptive adjectives and adverbs.'
+];
+
+const CONVERSATION_OPENERS = {
+    'Personal and Communication': [
+        'reconnecting with an old friend after years',
+        'meeting someone new at a community event',
+        'discussing weekend plans with a colleague',
+        'catching up with a family member over the phone'
+    ],
+    'Work and Business': [
+        'discussing a new project with a team member',
+        'giving feedback on a presentation',
+        'negotiating a business deal',
+        'onboarding a new colleague'
+    ],
+    'Meetings and Presentations': [
+        'brainstorming session for a new initiative',
+        'quarterly review meeting',
+        'presenting research findings to stakeholders',
+        'team retrospective discussion'
+    ],
+    'Transportation and Travel': [
+        'planning a road trip with friends',
+        'asking a local for travel recommendations',
+        'dealing with a flight delay at the airport',
+        'comparing different vacation destinations'
+    ],
+    'Shopping and Money': [
+        'discussing financial goals and budgeting',
+        'comparing products before a purchase',
+        'returning an item and explaining the issue',
+        'haggling at a market while traveling'
+    ],
+    'Food and Drink': [
+        'recommending a new restaurant to a friend',
+        'discussing dietary preferences and restrictions',
+        'sharing a family recipe and cooking tips',
+        'planning a dinner party menu'
+    ],
+    'Health and Medicine': [
+        'discussing fitness goals and workout routines',
+        'talking about stress management techniques',
+        'explaining symptoms to a healthcare provider',
+        'discussing work-life balance and wellness'
+    ],
+    'School and Education': [
+        'discussing study strategies and exam preparation',
+        'talking about career goals and educational paths',
+        'helping someone with a learning challenge',
+        'discussing the pros and cons of different courses'
+    ]
+};
+
 // Main App Component
 document.addEventListener('alpine:init', () => {
     // Global App State
@@ -1168,7 +1275,15 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
             const complexityDesc = complexityDescMap[this.sentenceComplexity];
             const maxSentences = length.split('-')[1].replace(' sentences', '');
 
+            // Random elements for variety
+            const variationSeed = generateVariationSeed();
+            const randomTone = getRandomItems(TRANSLATION_TONES);
+            const randomFocus = getRandomItems(TRANSLATION_FOCUS);
+            const randomPerspective = getRandomItems(TRANSLATION_PERSPECTIVES);
+
             this.practicePrompt = `You are a language tutor helping me practice ${sourceLang} to ${targetLang} translation.
+
+[Variation #${variationSeed}] - Please create UNIQUE, ORIGINAL content different from any previous sessions.
 
 TASK: Create a translation practice exercise following these requirements:
 
@@ -1179,7 +1294,14 @@ TASK: Create a translation practice exercise following these requirements:
    - Sentence complexity: ${complexityDesc}
    - Language: Write the passage in ${sourceLang}
 
-   IMPORTANT REQUIREMENTS:
+   CREATIVE REQUIREMENTS (for variety):
+   - Writing tone: ${randomTone}
+   - Grammar focus: Include ${randomFocus}
+   - Narrative perspective: Use ${randomPerspective}
+   - Be CREATIVE! Create a unique scenario, story, or situation within the topic
+   - Avoid generic, template-like content - make it interesting and memorable
+
+   STRUCTURAL REQUIREMENTS:
    - All sentences must be COHERENT and form a meaningful, connected passage (not random isolated sentences)
    - Use CONSISTENT tenses throughout the passage (choose appropriate tenses based on the narrative)
    - Sentences should flow naturally and logically from one to another
@@ -1474,19 +1596,36 @@ Your translation:`;
             const styleDesc = styleDescMap[this.chatStyle];
             const lengthInfo = lengthMap[this.chatLength];
 
+            // Random elements for variety
+            const variationSeed = generateVariationSeed();
+            const randomPersonality = getRandomItems(CONVERSATION_PERSONALITIES);
+            const randomChallenge = getRandomItems(CONVERSATION_CHALLENGES);
+            const topicOpeners = CONVERSATION_OPENERS[this.chatTopic] || [];
+            const randomOpener = topicOpeners.length > 0 ? getRandomItems(topicOpeners) : null;
+
             let roleplayContext = '';
             if (this.chatStyle === 'roleplay') {
-                const scenario = roleplayScenarios[this.chatTopic] || 'a realistic situation related to ' + this.chatTopic;
+                // Use random opener if available, otherwise fall back to default
+                const scenario = randomOpener || roleplayScenarios[this.chatTopic] || 'a realistic situation related to ' + this.chatTopic;
                 roleplayContext = `\n\nROLE-PLAY SCENARIO: Create a specific scenario about "${scenario}". Assign me a role and describe the setting before we begin.`;
             }
 
+            const contextHint = randomOpener && this.chatStyle !== 'roleplay'
+                ? `\n- Suggested context: ${randomOpener} (use this as inspiration but feel free to adapt)`
+                : '';
+
             this.chatPrompt = `You are an English conversation partner helping me practice speaking English at ${this.chatLevel} level.
+
+[Variation #${variationSeed}] - Please create UNIQUE, ORIGINAL conversation different from any previous sessions.
 
 CONVERSATION SETTINGS:
 - Topic: ${this.chatTopic}
 - My Level: ${this.chatLevel} (${levelDesc})
 - Style: ${this.chatStyle} - ${styleDesc}
-- Length: ${lengthInfo.exchanges} exchanges (${lengthInfo.desc} conversation)${roleplayContext}
+- Length: ${lengthInfo.exchanges} exchanges (${lengthInfo.desc} conversation)
+- Your personality: Be ${randomPersonality}${contextHint}${roleplayContext}
+
+PRACTICE CHALLENGE FOR ME: ${randomChallenge}
 
 SCORING CRITERIA (for each of my responses, score 0-10 with decimals allowed):
 - Communication (3 points): Clear message, appropriate response to context
