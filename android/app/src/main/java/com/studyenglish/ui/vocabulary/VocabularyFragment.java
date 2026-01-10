@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.SearchView;
 import android.widget.Spinner;
 
@@ -13,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -73,6 +75,12 @@ public class VocabularyFragment extends Fragment {
                 filterVocabulary();
                 return true;
             }
+        });
+
+        // Setup Add Vocabulary Button (AI Generator)
+        Button addVocabBtn = view.findViewById(R.id.btn_add_vocab);
+        addVocabBtn.setOnClickListener(v -> {
+            Navigation.findNavController(v).navigate(R.id.action_vocabulary_to_generator);
         });
 
         // Observe vocabulary list

@@ -7,7 +7,16 @@
     <fragment
         android:id="@+id/vocabularyFragment"
         android:name="com.studyenglish.ui.vocabulary.VocabularyFragment"
-        android:label="@string/nav_vocabulary" />
+        android:label="@string/nav_vocabulary">
+        <action
+            android:id="@+id/action_vocabulary_to_generator"
+            app:destination="@id/vocabularyGeneratorFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/vocabularyGeneratorFragment"
+        android:name="com.studyenglish.ui.vocabulary.VocabularyGeneratorFragment"
+        android:label="Vocabulary Generator" />
 
     <fragment
         android:id="@+id/quizFragment"
