@@ -46,102 +46,531 @@ function generateVariationSeed() {
     return Math.floor(Math.random() * 10000);
 }
 
-// Random elements for Translation Practice
-const TRANSLATION_TONES = [
-    'narrative (tell a story)',
-    'descriptive (paint a vivid picture)',
-    'informative (share facts and information)',
-    'persuasive (convince or argue a point)',
-    'reflective (share thoughts and feelings)',
-    'instructional (explain how to do something)'
-];
+// ============================================================================
+// LEVEL-APPROPRIATE CONSTANTS (CEFR Framework)
+// ============================================================================
 
-const TRANSLATION_FOCUS = [
-    'temporal expressions and time references',
-    'cause and effect relationships',
-    'comparisons and contrasts',
-    'opinions and preferences',
-    'hypothetical situations and conditionals',
-    'descriptions of people and places',
-    'sequences of events and processes',
-    'problems and solutions'
-];
+// TRANSLATION PRACTICE - Grammar Focus by Level
+const TRANSLATION_FOCUS_BY_LEVEL = {
+    'A1': [
+        'present simple tense (I work, she eats)',
+        'basic subject-verb-object word order',
+        'simple connectors (and, but, or)',
+        'basic time expressions (today, tomorrow, now, every day)',
+        'possessive adjectives (my, your, his, her, our, their)',
+        'there is / there are constructions',
+        'basic prepositions of place (in, on, at, under, next to)'
+    ],
+    'A2': [
+        'past simple tense (I worked, she ate)',
+        'future with "will" and "going to"',
+        'comparatives and superlatives (bigger, the biggest)',
+        'basic cause and effect (because, so)',
+        'frequency adverbs (always, usually, sometimes, never)',
+        'present continuous for current actions',
+        'can/could for ability and permission'
+    ],
+    'B1': [
+        'present perfect tense (I have worked)',
+        'first conditional (if + present, will + verb)',
+        'basic passive voice (it is made, they were built)',
+        'relative clauses with who, which, that',
+        'expressing opinions (I think, I believe, In my opinion)',
+        'used to for past habits',
+        'modal verbs for advice (should, ought to)'
+    ],
+    'B2': [
+        'second conditional (if + past, would + verb)',
+        'reported speech (She said that...)',
+        'passive voice in various tenses',
+        'third conditional (if + past perfect, would have)',
+        'advanced connectors (however, nevertheless, furthermore)',
+        'wish + past for regrets',
+        'modal perfects (could have, should have, might have)'
+    ],
+    'C1': [
+        'mixed conditionals',
+        'subjunctive mood (I suggest that he go...)',
+        'inversion for emphasis (Not only did he..., Rarely have I...)',
+        'advanced passive constructions (is said to be, is believed to have)',
+        'cleft sentences for emphasis (It was John who...)',
+        'ellipsis and substitution',
+        'nuanced modal expressions'
+    ]
+};
 
-const TRANSLATION_PERSPECTIVES = [
-    'first person (I/we)',
-    'second person (you)',
-    'third person (he/she/they)'
-];
+// TRANSLATION PRACTICE - Writing Tones by Level
+const TRANSLATION_TONES_BY_LEVEL = {
+    'A1': [
+        'simple and clear (everyday situations)',
+        'friendly and casual (talking to friends)',
+        'descriptive basics (describing people, places, things)'
+    ],
+    'A2': [
+        'narrative (telling simple stories)',
+        'informative (sharing basic facts)',
+        'personal (sharing experiences and feelings)',
+        'instructional (giving simple directions)'
+    ],
+    'B1': [
+        'narrative (tell a story with details)',
+        'descriptive (paint a vivid picture)',
+        'informative (share facts and information)',
+        'persuasive (express and support opinions)',
+        'reflective (share thoughts and feelings)'
+    ],
+    'B2': [
+        'analytical (examine ideas critically)',
+        'argumentative (present and defend a position)',
+        'narrative with complexity (multiple perspectives)',
+        'formal informative (report-style writing)',
+        'reflective and philosophical'
+    ],
+    'C1': [
+        'sophisticated narrative (nuanced storytelling)',
+        'academic and analytical',
+        'persuasive with rhetorical devices',
+        'satirical or ironic',
+        'nuanced and subtle expression'
+    ]
+};
 
-// Random elements for Conversation Practice
+// TRANSLATION PRACTICE - Creative Requirements by Level
+const CREATIVE_REQUIREMENTS_BY_LEVEL = {
+    'A1': `SIMPLICITY FOCUS:
+   - Create a very simple, everyday situation (going to school, eating breakfast, meeting a friend)
+   - Use only basic, common vocabulary
+   - Keep sentences short and clear
+   - Focus on CLARITY over creativity
+   - Use familiar contexts that A1 learners can relate to`,
+    'A2': `RELATABLE SCENARIO:
+   - Create a simple but engaging everyday scenario
+   - Include basic emotions and reactions
+   - Use common situations (shopping, traveling, working)
+   - Add a simple sequence of events
+   - Keep vocabulary accessible but slightly varied`,
+    'B1': `INTERESTING SCENARIO:
+   - Create an engaging scenario with a simple plot
+   - Include character motivations and reactions
+   - Add a small problem or interesting twist
+   - Use varied vocabulary and expressions
+   - Make it memorable but not overly complex`,
+    'B2': `ENGAGING NARRATIVE:
+   - Create a unique, memorable scenario with depth
+   - Include multiple perspectives or viewpoints
+   - Add complexity through cause-effect relationships
+   - Use sophisticated vocabulary naturally
+   - Include cultural or social context when appropriate`,
+    'C1': `SOPHISTICATED CONTENT:
+   - Create nuanced, thought-provoking scenarios
+   - Include abstract concepts and complex ideas
+   - Use subtle implications and inferences
+   - Employ sophisticated literary techniques
+   - Challenge the reader intellectually`
+};
+
+// TRANSLATION PRACTICE - Vocabulary Examples by Level
+const VOCAB_EXAMPLES_BY_LEVEL = {
+    'A1': {
+        word: 'friend',
+        meaning_vi: 'bạn, người bạn',
+        pronunciation: '/frend/',
+        part_of_speech: 'noun',
+        example_en: 'She is my best friend.',
+        example_vi: 'Cô ấy là bạn thân nhất của tôi.',
+        synonyms: 'buddy, pal'
+    },
+    'A2': {
+        word: 'schedule',
+        meaning_vi: 'lịch trình, thời gian biểu',
+        pronunciation: '/ˈskedʒuːl/',
+        part_of_speech: 'noun',
+        example_en: 'I need to check my schedule.',
+        example_vi: 'Tôi cần kiểm tra lịch trình của mình.',
+        synonyms: 'timetable, agenda'
+    },
+    'B1': {
+        word: 'opportunity',
+        meaning_vi: 'cơ hội',
+        pronunciation: '/ˌɒpəˈtjuːnɪti/',
+        part_of_speech: 'noun',
+        example_en: 'This is a great opportunity to learn.',
+        example_vi: 'Đây là cơ hội tuyệt vời để học hỏi.',
+        synonyms: 'chance, possibility'
+    },
+    'B2': {
+        word: 'collaborate',
+        meaning_vi: 'hợp tác, cộng tác',
+        pronunciation: '/kəˈlæbəreɪt/',
+        part_of_speech: 'verb',
+        example_en: 'We need to collaborate with other teams.',
+        example_vi: 'Chúng ta cần hợp tác với các đội khác.',
+        synonyms: 'cooperate, work together'
+    },
+    'C1': {
+        word: 'nuance',
+        meaning_vi: 'sắc thái, nét tinh tế',
+        pronunciation: '/ˈnjuːɑːns/',
+        part_of_speech: 'noun',
+        example_en: 'The nuances of the language are difficult to master.',
+        example_vi: 'Các sắc thái của ngôn ngữ rất khó để thành thạo.',
+        synonyms: 'subtlety, distinction, shade'
+    }
+};
+
+// CONVERSATION PRACTICE - Challenges by Level
+const CONVERSATION_CHALLENGES_BY_LEVEL = {
+    'A1': [
+        'Try to answer using complete sentences, not just one word.',
+        'Practice using "I like...", "I have...", "I want..." in your responses.',
+        'Try to ask me at least one simple question (What? Where? When?).',
+        'Use basic greetings and polite phrases (please, thank you, sorry).',
+        'Practice saying numbers, days, and times correctly.'
+    ],
+    'A2': [
+        'Try to use past tense when talking about yesterday or last week.',
+        'Practice expressing your opinions with "I think..." or "I like... because...".',
+        'Use linking words like "and", "but", "because", "so" to connect ideas.',
+        'Try to ask follow-up questions to keep the conversation going.',
+        'Practice describing people, places, or things with adjectives.'
+    ],
+    'B1': [
+        'Try to use at least 2-3 different tenses in our conversation.',
+        'Practice expressing agreement and polite disagreement.',
+        'Use a variety of linking words and transitions (however, although, therefore).',
+        'Try to paraphrase - express the same idea in different ways.',
+        'Practice giving reasons and explanations for your opinions.'
+    ],
+    'B2': [
+        'Try to use some idiomatic expressions naturally in context.',
+        'Practice hypothetical language (If I were..., I would have...).',
+        'Use sophisticated connectors to structure your arguments.',
+        'Try to express nuanced opinions (partly agree, with reservations).',
+        'Practice summarizing and synthesizing information.'
+    ],
+    'C1': [
+        'Use advanced vocabulary and idiomatic expressions appropriately.',
+        'Practice subtle distinctions in meaning and register.',
+        'Employ rhetorical techniques to strengthen your arguments.',
+        'Try to use humor, irony, or cultural references naturally.',
+        'Practice expressing complex, abstract ideas with precision.'
+    ]
+};
+
+// CONVERSATION PRACTICE - Personalities (same for all levels, adjusted language complexity)
 const CONVERSATION_PERSONALITIES = [
     'friendly and encouraging',
     'curious and inquisitive',
     'professional and polite',
     'enthusiastic and energetic',
     'thoughtful and reflective',
-    'humorous and light-hearted'
+    'patient and supportive'
 ];
 
-const CONVERSATION_CHALLENGES = [
-    'Try to use at least 2-3 idiomatic expressions during our chat.',
-    'Practice expressing agreement and polite disagreement.',
-    'Focus on using a variety of linking words and transitions.',
-    'Try to ask me follow-up questions to show active listening.',
-    'Practice paraphrasing - try to rephrase ideas in different ways.',
-    'Focus on using descriptive adjectives and adverbs.'
-];
-
-const CONVERSATION_OPENERS = {
-    'Personal and Communication': [
-        'reconnecting with an old friend after years',
-        'meeting someone new at a community event',
-        'discussing weekend plans with a colleague',
-        'catching up with a family member over the phone'
-    ],
-    'Work and Business': [
-        'discussing a new project with a team member',
-        'giving feedback on a presentation',
-        'negotiating a business deal',
-        'onboarding a new colleague'
-    ],
-    'Meetings and Presentations': [
-        'brainstorming session for a new initiative',
-        'quarterly review meeting',
-        'presenting research findings to stakeholders',
-        'team retrospective discussion'
-    ],
-    'Transportation and Travel': [
-        'planning a road trip with friends',
-        'asking a local for travel recommendations',
-        'dealing with a flight delay at the airport',
-        'comparing different vacation destinations'
-    ],
-    'Shopping and Money': [
-        'discussing financial goals and budgeting',
-        'comparing products before a purchase',
-        'returning an item and explaining the issue',
-        'haggling at a market while traveling'
-    ],
-    'Food and Drink': [
-        'recommending a new restaurant to a friend',
-        'discussing dietary preferences and restrictions',
-        'sharing a family recipe and cooking tips',
-        'planning a dinner party menu'
-    ],
-    'Health and Medicine': [
-        'discussing fitness goals and workout routines',
-        'talking about stress management techniques',
-        'explaining symptoms to a healthcare provider',
-        'discussing work-life balance and wellness'
-    ],
-    'School and Education': [
-        'discussing study strategies and exam preparation',
-        'talking about career goals and educational paths',
-        'helping someone with a learning challenge',
-        'discussing the pros and cons of different courses'
-    ]
+// CONVERSATION PRACTICE - Detailed Personality Descriptions by Level
+const PERSONALITY_DESCRIPTIONS = {
+    'friendly and encouraging': {
+        'A1': 'Be very patient and supportive. Speak slowly and clearly. Celebrate small successes.',
+        'A2': 'Be warm and supportive. Give positive reinforcement. Help when they struggle.',
+        'B1': 'Be friendly and conversational. Encourage them to express opinions. Be supportive but challenge them.',
+        'B2': 'Be engaging and intellectually curious. Push them to elaborate and be more precise.',
+        'C1': 'Be a stimulating conversation partner. Challenge their ideas while remaining supportive.'
+    },
+    'curious and inquisitive': {
+        'A1': 'Ask simple questions about their daily life. Show interest in their answers.',
+        'A2': 'Ask about their experiences and preferences. Be genuinely interested.',
+        'B1': 'Ask thought-provoking questions. Dig deeper into their opinions.',
+        'B2': 'Challenge them with probing questions. Explore topics from multiple angles.',
+        'C1': 'Engage in intellectual discourse. Ask questions that require nuanced responses.'
+    },
+    'professional and polite': {
+        'A1': 'Be formal but warm. Use simple, polite phrases. Be patient with mistakes.',
+        'A2': 'Maintain a professional tone. Model polite language. Be respectful.',
+        'B1': 'Be professionally cordial. Use appropriate register. Discuss topics formally.',
+        'B2': 'Engage in professional discourse. Use business-appropriate language.',
+        'C1': 'Conduct sophisticated professional dialogue. Use nuanced formal register.'
+    },
+    'enthusiastic and energetic': {
+        'A1': 'Show excitement about simple topics. Use encouraging exclamations. Keep energy up.',
+        'A2': 'Be lively and engaging. Show genuine enthusiasm for their progress.',
+        'B1': 'Bring energy to discussions. Be passionate about topics. Inspire engagement.',
+        'B2': 'Be dynamically engaged. Show intellectual enthusiasm.',
+        'C1': 'Bring sophisticated enthusiasm. Be passionately engaged with complex ideas.'
+    },
+    'thoughtful and reflective': {
+        'A1': 'Pause to think. Model careful speaking. Be calm and measured.',
+        'A2': 'Take time to consider responses. Model thoughtful language.',
+        'B1': 'Share reflections and observations. Encourage deeper thinking.',
+        'B2': 'Engage in reflective dialogue. Explore philosophical aspects.',
+        'C1': 'Engage in deep intellectual reflection. Explore abstract concepts.'
+    },
+    'patient and supportive': {
+        'A1': 'Be extremely patient. Repeat when needed. Never show frustration. Give lots of encouragement.',
+        'A2': 'Be patient with mistakes. Provide gentle corrections. Build confidence.',
+        'B1': 'Support their growth while challenging them. Be understanding of errors.',
+        'B2': 'Balance challenge with support. Help them reach higher levels.',
+        'C1': 'Provide sophisticated support. Help refine their advanced skills.'
+    }
 };
+
+// CONVERSATION PRACTICE - Topic Openers by Level
+const CONVERSATION_OPENERS_BY_LEVEL = {
+    'A1': {
+        'Personal and Communication': [
+            'talking about your family',
+            'describing your daily routine',
+            'introducing yourself to a new neighbor',
+            'talking about your hobbies'
+        ],
+        'Work and Business': [
+            'describing your job or school',
+            'talking about your workplace',
+            'describing a typical work day',
+            'talking about your colleagues'
+        ],
+        'Transportation and Travel': [
+            'asking for directions',
+            'talking about how you get to work/school',
+            'planning a simple trip',
+            'at the train station or bus stop'
+        ],
+        'Shopping and Money': [
+            'buying groceries at a store',
+            'asking about prices',
+            'describing what you want to buy',
+            'paying for items'
+        ],
+        'Food and Drink': [
+            'ordering food at a restaurant',
+            'talking about your favorite foods',
+            'describing what you eat for meals',
+            'at a coffee shop'
+        ],
+        'Health and Medicine': [
+            'describing how you feel',
+            'at the doctor (simple visit)',
+            'talking about healthy habits',
+            'describing symptoms simply'
+        ],
+        'School and Education': [
+            'talking about your classes',
+            'describing your school/university',
+            'talking about your teachers',
+            'discussing homework'
+        ],
+        'Meetings and Presentations': [
+            'introducing yourself in a meeting',
+            'describing a simple project',
+            'asking basic questions in a meeting',
+            'talking about your team'
+        ]
+    },
+    'A2': {
+        'Personal and Communication': [
+            'reconnecting with an old friend',
+            'making plans for the weekend',
+            'talking about a recent vacation',
+            'discussing your neighborhood'
+        ],
+        'Work and Business': [
+            'discussing your job responsibilities',
+            'talking about a work project',
+            'describing your career goals',
+            'meeting a new colleague'
+        ],
+        'Transportation and Travel': [
+            'booking a hotel room',
+            'planning a vacation',
+            'dealing with travel problems',
+            'comparing travel options'
+        ],
+        'Shopping and Money': [
+            'returning an item to a store',
+            'comparing products before buying',
+            'talking about sales and discounts',
+            'discussing your shopping habits'
+        ],
+        'Food and Drink': [
+            'recommending a restaurant',
+            'discussing cooking and recipes',
+            'talking about eating habits',
+            'planning a dinner party'
+        ],
+        'Health and Medicine': [
+            'explaining symptoms to a doctor',
+            'discussing exercise routines',
+            'talking about healthy eating',
+            'discussing sleep habits'
+        ],
+        'School and Education': [
+            'discussing study habits',
+            'talking about exams',
+            'describing a school project',
+            'discussing future studies'
+        ],
+        'Meetings and Presentations': [
+            'preparing for a presentation',
+            'discussing meeting outcomes',
+            'giving simple feedback',
+            'planning a team project'
+        ]
+    },
+    'B1': {
+        'Personal and Communication': [
+            'discussing life changes and decisions',
+            'talking about relationships and friendships',
+            'sharing opinions about social issues',
+            'discussing cultural differences'
+        ],
+        'Work and Business': [
+            'discussing a new project with a team member',
+            'giving and receiving feedback',
+            'talking about career development',
+            'discussing workplace challenges'
+        ],
+        'Transportation and Travel': [
+            'discussing travel experiences and adventures',
+            'comparing different types of travel',
+            'dealing with unexpected travel situations',
+            'planning a complex trip'
+        ],
+        'Shopping and Money': [
+            'discussing financial goals and budgeting',
+            'debating purchase decisions',
+            'talking about consumer habits',
+            'discussing value for money'
+        ],
+        'Food and Drink': [
+            'discussing food culture and traditions',
+            'debating healthy eating choices',
+            'sharing and explaining recipes',
+            'discussing restaurant experiences'
+        ],
+        'Health and Medicine': [
+            'discussing work-life balance',
+            'talking about mental health awareness',
+            'comparing healthcare approaches',
+            'discussing fitness and wellness goals'
+        ],
+        'School and Education': [
+            'discussing different learning styles',
+            'debating education systems',
+            'talking about career-education connections',
+            'discussing lifelong learning'
+        ],
+        'Meetings and Presentations': [
+            'brainstorming session for a new initiative',
+            'presenting project updates',
+            'discussing meeting strategies',
+            'handling difficult questions'
+        ]
+    },
+    'B2': {
+        'Personal and Communication': [
+            'discussing personal values and beliefs',
+            'analyzing relationship dynamics',
+            'debating social media impact on relationships',
+            'exploring cultural identity'
+        ],
+        'Work and Business': [
+            'negotiating a business deal',
+            'discussing organizational change',
+            'analyzing market trends',
+            'debating management strategies'
+        ],
+        'Transportation and Travel': [
+            'debating sustainable travel',
+            'analyzing tourism impact on communities',
+            'discussing future of transportation',
+            'comparing travel philosophies'
+        ],
+        'Shopping and Money': [
+            'analyzing consumer psychology',
+            'debating ethical consumption',
+            'discussing economic trends',
+            'exploring investment strategies'
+        ],
+        'Food and Drink': [
+            'analyzing food industry practices',
+            'debating food sustainability',
+            'discussing culinary traditions and innovation',
+            'exploring food and identity'
+        ],
+        'Health and Medicine': [
+            'analyzing healthcare systems',
+            'debating medical ethics',
+            'discussing mental health in society',
+            'exploring alternative medicine'
+        ],
+        'School and Education': [
+            'analyzing education reform',
+            'debating technology in education',
+            'discussing equal access to education',
+            'exploring future of learning'
+        ],
+        'Meetings and Presentations': [
+            'handling complex stakeholder presentations',
+            'facilitating difficult discussions',
+            'presenting controversial findings',
+            'managing cross-cultural meetings'
+        ]
+    },
+    'C1': {
+        'Personal and Communication': [
+            'exploring philosophical aspects of human connection',
+            'analyzing societal shifts in communication',
+            'debating authenticity in digital age relationships',
+            'examining cross-generational communication gaps'
+        ],
+        'Work and Business': [
+            'analyzing global business ethics',
+            'debating future of work and automation',
+            'examining corporate social responsibility',
+            'discussing leadership philosophies'
+        ],
+        'Transportation and Travel': [
+            'examining globalization through travel lens',
+            'debating ethics of tourism',
+            'analyzing transportation policy',
+            'exploring travel as cultural exchange'
+        ],
+        'Shopping and Money': [
+            'analyzing capitalism and consumerism',
+            'debating wealth inequality',
+            'examining behavioral economics',
+            'exploring alternative economic models'
+        ],
+        'Food and Drink': [
+            'examining food as cultural expression',
+            'debating global food systems',
+            'analyzing food security challenges',
+            'exploring gastronomy and art'
+        ],
+        'Health and Medicine': [
+            'examining bioethics and medical advances',
+            'debating healthcare access globally',
+            'analyzing public health policy',
+            'exploring mind-body connections'
+        ],
+        'School and Education': [
+            'examining education philosophy',
+            'debating standardization vs individualization',
+            'analyzing education and social mobility',
+            'exploring pedagogy innovations'
+        ],
+        'Meetings and Presentations': [
+            'facilitating high-stakes negotiations',
+            'presenting to executive leadership',
+            'managing crisis communications',
+            'leading strategic planning sessions'
+        ]
+    }
+};
+
+// Helper function to get level-appropriate content
+function getLevelContent(contentMap, level) {
+    return contentMap[level] || contentMap['B1']; // Default to B1 if level not found
+}
 
 // Main App Component
 document.addEventListener('alpine:init', () => {
@@ -1269,18 +1698,30 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
                 'mixed': 'a natural mix of simple, compound, and complex sentences'
             };
 
+            // Perspective options (same for all levels)
+            const perspectives = ['first person (I/we)', 'second person (you)', 'third person (he/she/they)'];
+
             const sourceLang = this.practiceDirection === 'vi_to_en' ? 'Vietnamese' : 'English';
             const targetLang = this.practiceDirection === 'vi_to_en' ? 'English' : 'Vietnamese';
             const length = lengthMap[this.practiceLength];
             const levelDesc = levelDescMap[this.practiceLevel];
             const complexityDesc = complexityDescMap[this.sentenceComplexity];
             const maxSentences = length.split('-')[1].replace(' sentences', '');
+            const level = this.practiceLevel;
 
-            // Random elements for variety
+            // LEVEL-APPROPRIATE random elements for variety
             const variationSeed = generateVariationSeed();
-            const randomTone = getRandomItems(TRANSLATION_TONES);
-            const randomFocus = getRandomItems(TRANSLATION_FOCUS);
-            const randomPerspective = getRandomItems(TRANSLATION_PERSPECTIVES);
+            const levelTones = getLevelContent(TRANSLATION_TONES_BY_LEVEL, level);
+            const levelFocus = getLevelContent(TRANSLATION_FOCUS_BY_LEVEL, level);
+            const creativeReq = getLevelContent(CREATIVE_REQUIREMENTS_BY_LEVEL, level);
+            const vocabExample = getLevelContent(VOCAB_EXAMPLES_BY_LEVEL, level);
+
+            const randomTone = getRandomItems(levelTones);
+            const randomFocus = getRandomItems(levelFocus);
+            const randomPerspective = getRandomItems(perspectives);
+
+            // Format vocab example for display
+            const vocabJson = JSON.stringify([vocabExample], null, 6).replace(/\n/g, '\n   ');
 
             this.practicePrompt = `You are a language tutor helping me practice ${sourceLang} to ${targetLang} translation.
 
@@ -1295,18 +1736,20 @@ TASK: Create a translation practice exercise following these requirements:
    - Sentence complexity: ${complexityDesc}
    - Language: Write the passage in ${sourceLang}
 
-   CREATIVE REQUIREMENTS (for variety):
+   ${creativeReq}
+
+   GRAMMAR & STYLE FOR THIS EXERCISE:
    - Writing tone: ${randomTone}
-   - Grammar focus: Include ${randomFocus}
-   - Narrative perspective: Use ${randomPerspective}
-   - Be CREATIVE! Create a unique scenario, story, or situation within the topic
-   - Avoid generic, template-like content - make it interesting and memorable
+   - Grammar focus: ${randomFocus}
+   - Narrative perspective: ${randomPerspective}
 
    STRUCTURAL REQUIREMENTS:
    - All sentences must be COHERENT and form a meaningful, connected passage (not random isolated sentences)
-   - Use CONSISTENT tenses throughout the passage (choose appropriate tenses based on the narrative)
+   - Use CONSISTENT tenses throughout the passage (appropriate for ${level} level)
    - Sentences should flow naturally and logically from one to another
-   - Include transitional words/phrases to connect ideas
+   - Include transitional words/phrases appropriate for ${level} level
+
+   IMPORTANT: Stay within ${level} level! Do NOT use vocabulary or grammar structures above this level.
 
 2. SCORING CRITERIA (for each sentence, score 0-10 with decimals allowed):
    - Accuracy (4 points): Meaning preserved, no mistranslation
@@ -1323,7 +1766,7 @@ TASK: Create a translation practice exercise following these requirements:
    - After I respond:
      • 📊 Score: X.X/10 (breakdown: Accuracy X/4, Grammar X/3, Vocabulary X/2, Fluency X/1)
      • ❌ Errors: List specific errors with corrections
-     • 💡 Suggestions: Tips for improvement
+     • 💡 Suggestions: Tips for improvement (appropriate for ${level} learner)
      • ✅ Model translation: Provide ideal translation
    - Then move to the next sentence
 
@@ -1333,24 +1776,15 @@ TASK: Create a translation practice exercise following these requirements:
    - 📈 Score breakdown by category
    - ❌ Common mistakes I made and how to avoid them
    - ✅ What I did well
-   - 📚 Vocabulary to Remember: 10-15 important words/phrases with meanings and examples
+   - 📚 Vocabulary to Remember: 10-15 ${level}-appropriate words/phrases with meanings and examples
 
 5. JSON VOCABULARY OUTPUT:
-   At the very end, provide a JSON array of new vocabulary for me to add to my learning list:
+   At the very end, provide a JSON array of ${level}-level vocabulary for me to add to my learning list:
    \`\`\`json
-   [
-     {
-       "word": "collaborate",
-       "meaning_vi": "hợp tác, cộng tác",
-       "pronunciation": "/kəˈlæbəreɪt/",
-       "part_of_speech": "verb",
-       "example_en": "We need to collaborate with other teams.",
-       "example_vi": "Chúng ta cần hợp tác với các đội khác.",
-       "synonyms": "cooperate, work together"
-     }
-   ]
+   ${vocabJson}
    \`\`\`
-   Include 10-15 important words from this exercise. Each word MUST have all fields: word, meaning_vi, pronunciation (IPA format), part_of_speech, example_en, example_vi, synonyms.
+   Include 10-15 important ${level}-level words from this exercise. Each word MUST have all fields: word, meaning_vi, pronunciation (IPA format), part_of_speech, example_en, example_vi, synonyms.
+   IMPORTANT: Only include vocabulary appropriate for ${level} level!
 
 START by generating the ${sourceLang} passage about "${this.practiceTopic}" (${length}, ${complexityDesc}) and present the FIRST sentence for me to translate.
 
@@ -1574,6 +2008,8 @@ Your translation:`;
         },
 
         generateChatPrompt() {
+            const level = this.chatLevel;
+
             const levelDescMap = {
                 'A1': 'very simple vocabulary and basic grammar, short sentences, common everyday words',
                 'A2': 'elementary vocabulary and simple grammar, can discuss familiar topics',
@@ -1596,51 +2032,83 @@ Your translation:`;
                 'long': { exchanges: '18-25', desc: 'extended' }
             };
 
-            const roleplayScenarios = {
-                'Personal and Communication': 'meeting a new neighbor or reconnecting with an old friend',
-                'Work and Business': 'a job interview or a meeting with a business partner',
-                'Meetings and Presentations': 'presenting a project update to your team',
-                'Transportation and Travel': 'asking for directions or booking a hotel',
-                'Shopping and Money': 'negotiating a price or returning a product',
-                'Food and Drink': 'ordering at a restaurant or discussing recipes',
-                'Health and Medicine': 'visiting a doctor or discussing healthy habits',
-                'School and Education': 'talking to a teacher or discussing study plans'
-            };
-
-            const levelDesc = levelDescMap[this.chatLevel];
+            const levelDesc = levelDescMap[level];
             const styleDesc = styleDescMap[this.chatStyle];
             const lengthInfo = lengthMap[this.chatLength];
 
-            // Random elements for variety
+            // LEVEL-APPROPRIATE random elements for variety
             const variationSeed = generateVariationSeed();
             const randomPersonality = getRandomItems(CONVERSATION_PERSONALITIES);
-            const randomChallenge = getRandomItems(CONVERSATION_CHALLENGES);
-            const topicOpeners = CONVERSATION_OPENERS[this.chatTopic] || [];
+            const personalityDesc = PERSONALITY_DESCRIPTIONS[randomPersonality]?.[level] || '';
+
+            // Get level-appropriate challenges and openers
+            const levelChallenges = getLevelContent(CONVERSATION_CHALLENGES_BY_LEVEL, level);
+            const levelOpeners = getLevelContent(CONVERSATION_OPENERS_BY_LEVEL, level);
+            const topicOpeners = levelOpeners[this.chatTopic] || [];
+
+            const randomChallenge = getRandomItems(levelChallenges);
             const randomOpener = topicOpeners.length > 0 ? getRandomItems(topicOpeners) : null;
+
+            // Get level-appropriate vocab example
+            const vocabExample = getLevelContent(VOCAB_EXAMPLES_BY_LEVEL, level);
+            const vocabJson = JSON.stringify([vocabExample], null, 2);
 
             let roleplayContext = '';
             if (this.chatStyle === 'roleplay') {
-                // Use random opener if available, otherwise fall back to default
-                const scenario = randomOpener || roleplayScenarios[this.chatTopic] || 'a realistic situation related to ' + this.chatTopic;
-                roleplayContext = `\n\nROLE-PLAY SCENARIO: Create a specific scenario about "${scenario}". Assign me a role and describe the setting before we begin.`;
+                const scenario = randomOpener || 'a realistic situation related to ' + this.chatTopic;
+                roleplayContext = `\n\nROLE-PLAY SCENARIO: Create a specific ${level}-appropriate scenario about "${scenario}".
+Assign me a role and describe the setting before we begin.
+Keep the scenario complexity suitable for ${level} level.`;
             }
 
             const contextHint = randomOpener && this.chatStyle !== 'roleplay'
                 ? `\n- Suggested context: ${randomOpener} (use this as inspiration but feel free to adapt)`
                 : '';
 
-            this.chatPrompt = `You are an English conversation partner helping me practice speaking English at ${this.chatLevel} level.
+            // Level-specific language guidance
+            const languageGuidance = {
+                'A1': `- Use VERY simple sentences (5-8 words typically)
+   - Speak slowly and clearly
+   - Use only basic vocabulary (common everyday words)
+   - Avoid idioms, phrasal verbs, and complex grammar
+   - Repeat or rephrase if I seem confused`,
+                'A2': `- Use simple sentences with some compound structures
+   - Use everyday vocabulary with occasional new words (explain if needed)
+   - Avoid complex idioms, use only basic phrasal verbs
+   - Be patient and supportive`,
+                'B1': `- Use varied sentence structures
+   - Include some common idioms and phrasal verbs
+   - Challenge me with new vocabulary in context
+   - Encourage me to express opinions`,
+                'B2': `- Use natural, fluent English with varied structures
+   - Include idiomatic expressions and phrasal verbs
+   - Discuss abstract concepts when relevant
+   - Push me to be more precise and nuanced`,
+                'C1': `- Use sophisticated, natural English
+   - Include nuanced expressions, idioms, and cultural references
+   - Engage with complex, abstract topics
+   - Challenge me to use precise, varied vocabulary`
+            };
+
+            this.chatPrompt = `You are an English conversation partner helping me practice speaking English at ${level} level.
 
 [Variation #${variationSeed}] - Please create UNIQUE, ORIGINAL conversation different from any previous sessions.
 
 CONVERSATION SETTINGS:
 - Topic: ${this.chatTopic}
-- My Level: ${this.chatLevel} (${levelDesc})
+- My Level: ${level} (${levelDesc})
 - Style: ${this.chatStyle} - ${styleDesc}
-- Length: ${lengthInfo.exchanges} exchanges (${lengthInfo.desc} conversation)
-- Your personality: Be ${randomPersonality}${contextHint}${roleplayContext}
+- Length: ${lengthInfo.exchanges} exchanges (${lengthInfo.desc} conversation)${contextHint}${roleplayContext}
 
-PRACTICE CHALLENGE FOR ME: ${randomChallenge}
+YOUR PERSONALITY & BEHAVIOR:
+- Be ${randomPersonality}
+- ${personalityDesc}
+
+PRACTICE CHALLENGE FOR ME (${level} level):
+${randomChallenge}
+
+LANGUAGE LEVEL GUIDANCE:
+${languageGuidance[level]}
 
 SCORING CRITERIA (for each of my responses, score 0-10 with decimals allowed):
 - Communication (3 points): Clear message, appropriate response to context
@@ -1650,16 +2118,17 @@ SCORING CRITERIA (for each of my responses, score 0-10 with decimals allowed):
 
 YOUR ROLE AS CONVERSATION PARTNER:
 1. Engage in natural, flowing conversation about the topic
-2. Match your language complexity to my ${this.chatLevel} level
-3. Keep your responses conversational (2-4 sentences typically)
+2. STRICTLY match your language complexity to ${level} level
+3. Keep your responses conversational (2-4 sentences for lower levels, can be longer for B2/C1)
 4. Ask follow-up questions to keep the conversation going
+5. Naturally introduce 1-2 new ${level}-appropriate vocabulary items per exchange
 
 AFTER EACH OF MY RESPONSES:
 1. Continue the conversation naturally
 2. Then provide feedback:
    📊 Score: X.X/10 (Communication X/3, Grammar X/3, Vocabulary X/2, Fluency X/2)
    📝 Corrections (if any): "[error]" → "[correct]"
-   💡 Better expression: Suggest more natural ways to say what I meant
+   💡 Better expression: Suggest ${level}-appropriate alternatives
 3. If my English is perfect, just show the score without corrections
 
 CONVERSATION FLOW:
@@ -1671,28 +2140,19 @@ Provide "📊 FINAL ASSESSMENT":
 - Overall Score: X.X/10 (can be decimal like 7.5, 8.3)
 - Score breakdown by category (average)
 - ✅ Strengths: What I did well
-- ❌ Areas to improve: Common mistakes with corrections
-- 📚 Key Vocabulary: 10-15 useful words/phrases from our conversation (with Vietnamese translations)
-- 💡 Tips: Specific suggestions for improvement
+- ❌ Areas to improve: Common mistakes with ${level}-appropriate corrections
+- 📚 Key Vocabulary: 10-15 ${level}-level words/phrases from our conversation (with Vietnamese translations)
+- 💡 Tips: Specific suggestions for a ${level} learner
 
 JSON VOCABULARY OUTPUT:
-At the very end, provide a JSON array of new vocabulary for me to add to my learning list:
+At the very end, provide a JSON array of ${level}-level vocabulary for me to add to my learning list:
 \`\`\`json
-[
-  {
-    "word": "collaborate",
-    "meaning_vi": "hợp tác, cộng tác",
-    "pronunciation": "/kəˈlæbəreɪt/",
-    "part_of_speech": "verb",
-    "example_en": "We need to collaborate with other teams.",
-    "example_vi": "Chúng ta cần hợp tác với các đội khác.",
-    "synonyms": "cooperate, work together"
-  }
-]
+${vocabJson}
 \`\`\`
-Include 10-15 important words from our conversation. Each word MUST have all fields: word, meaning_vi, pronunciation (IPA format), part_of_speech, example_en, example_vi, synonyms.
+Include 10-15 ${level}-appropriate words from our conversation. Each word MUST have all fields: word, meaning_vi, pronunciation (IPA format), part_of_speech, example_en, example_vi, synonyms.
+IMPORTANT: Only include vocabulary appropriate for ${level} level!
 
-START the conversation now! Greet me and ask an opening question about "${this.chatTopic}".
+START the conversation now! Greet me appropriately for ${level} level and ask an opening question about "${this.chatTopic}".
 
 [Exchange 1/${lengthInfo.exchanges.split('-')[1]}]`;
         },
