@@ -1065,10 +1065,10 @@
                                     <i class="fas fa-clipboard mr-2"></i>
                                     Prompt for Translation Practice
                                 </h3>
-                                <button @click="copyPracticePrompt($event)"
-                                        class="px-4 py-2 rounded-lg text-sm transition-all duration-300"
-                                        :class="promptCopied ? 'bg-green-500 text-white' : 'bg-gray-100 hover:bg-gray-200'">
-                                    <i class="fas mr-1" :class="promptCopied ? 'fa-check' : 'fa-copy'"></i>
+                                <button @click="copyPracticePrompt()"
+                                        class="px-4 py-2 rounded-lg text-sm transition-all duration-300 bg-gray-100 hover:bg-gray-200"
+                                        :class="{ 'bg-green-500 text-white hover:bg-green-500': promptCopied }">
+                                    <i class="fas fa-copy mr-1" :class="{ 'fa-check': promptCopied, 'fa-copy': !promptCopied }"></i>
                                     <span x-text="promptCopied ? 'Copied!' : 'Copy Prompt'"></span>
                                 </button>
                             </div>
@@ -1370,10 +1370,10 @@
                                     <i class="fas fa-clipboard mr-2"></i>
                                     Prompt for Conversation Practice
                                 </h3>
-                                <button @click="copyChatPrompt($event)"
-                                        class="px-4 py-2 rounded-lg text-sm transition-all duration-300"
-                                        :class="chatPromptCopied ? 'bg-green-500 text-white' : 'bg-gray-100 hover:bg-gray-200'">
-                                    <i class="fas mr-1" :class="chatPromptCopied ? 'fa-check' : 'fa-copy'"></i>
+                                <button @click="copyChatPrompt()"
+                                        class="px-4 py-2 rounded-lg text-sm transition-all duration-300 bg-gray-100 hover:bg-gray-200"
+                                        :class="{ 'bg-green-500 text-white hover:bg-green-500': chatPromptCopied }">
+                                    <i class="fas fa-copy mr-1" :class="{ 'fa-check': chatPromptCopied, 'fa-copy': !chatPromptCopied }"></i>
                                     <span x-text="chatPromptCopied ? 'Copied!' : 'Copy Prompt'"></span>
                                 </button>
                             </div>
