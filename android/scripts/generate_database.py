@@ -213,6 +213,16 @@ def create_database():
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_quiz_topic ON quiz(topic)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_quiz_level ON quiz(level)')
 
+    # Create Room master table (required for Room to recognize the database)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS room_master_table (
+            id INTEGER PRIMARY KEY,
+            identity_hash TEXT
+        )
+    ''')
+    # Insert Room identity hash (this should match what Room generates)
+    cursor.execute("INSERT OR REPLACE INTO room_master_table (id, identity_hash) VALUES (42, 'study_english_v2')")
+
     # Insert vocabulary data
     now = int(datetime.now().timestamp() * 1000)
 
