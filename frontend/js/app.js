@@ -1121,6 +1121,7 @@ Generate ${this.numWords} words for "${this.selectedTopic}" at ${this.selectedLe
         sentenceComplexity: '',
         practicePrompt: '',
         practiceScore: '',
+        promptCopied: false,
         translationHistory: [],
         // Topic Stats
         topicStats: [],
@@ -1362,7 +1363,11 @@ Your translation:`;
 
         copyPracticePrompt() {
             navigator.clipboard.writeText(this.practicePrompt);
-            Alpine.store('app')?.showToast?.('Prompt copied to clipboard!', 'success');
+            this.promptCopied = true;
+            Alpine.store('app')?.showToast?.('Đã copy prompt!', 'success');
+            setTimeout(() => {
+                this.promptCopied = false;
+            }, 2000);
         },
 
         async parseAndSaveVocab() {
@@ -1417,6 +1422,7 @@ Your translation:`;
         chatLength: '',
         chatPrompt: '',
         chatScore: '',
+        chatPromptCopied: false,
         conversationHistory: [],
         // Topic Stats
         topicStats: [],
@@ -1684,7 +1690,11 @@ START the conversation now! Greet me and ask an opening question about "${this.c
 
         copyChatPrompt() {
             navigator.clipboard.writeText(this.chatPrompt);
-            Alpine.store('app')?.showToast?.('Prompt copied to clipboard!', 'success');
+            this.chatPromptCopied = true;
+            Alpine.store('app')?.showToast?.('Đã copy prompt!', 'success');
+            setTimeout(() => {
+                this.chatPromptCopied = false;
+            }, 2000);
         },
 
         async parseAndSaveVocab() {
