@@ -1066,8 +1066,11 @@
                                     Prompt for Translation Practice
                                 </h3>
                                 <button @click="copyPracticePrompt()"
-                                        class="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gray-100 hover:bg-gray-200 text-gray-700">
-                                    <i class="fas fa-copy mr-2"></i>Copy Prompt
+                                        class="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                                        :class="promptCopied ? 'bg-green-500 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'">
+                                    <i class="fas mr-2" :class="promptCopied ? 'fa-check' : 'fa-copy'"></i>
+                                    <span x-show="!promptCopied">Copy Prompt</span>
+                                    <span x-show="promptCopied">Copied!</span>
                                 </button>
                             </div>
                             <textarea readonly
@@ -1369,8 +1372,11 @@
                                     Prompt for Conversation Practice
                                 </h3>
                                 <button @click="copyChatPrompt()"
-                                        class="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gray-100 hover:bg-gray-200 text-gray-700">
-                                    <i class="fas fa-copy mr-2"></i>Copy Prompt
+                                        class="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                                        :class="chatPromptCopied ? 'bg-green-500 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'">
+                                    <i class="fas mr-2" :class="chatPromptCopied ? 'fa-check' : 'fa-copy'"></i>
+                                    <span x-show="!chatPromptCopied">Copy Prompt</span>
+                                    <span x-show="chatPromptCopied">Copied!</span>
                                 </button>
                             </div>
                             <textarea readonly
