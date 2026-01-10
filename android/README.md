@@ -1,114 +1,183 @@
-# Study English - Android App
+# StudyEnglish - Android App
 
-Ứng dụng Android học tiếng Anh sử dụng WebView để kết nối với backend server.
+Ứng dụng học tiếng Anh offline cho Android. Hoạt động hoàn toàn độc lập, không cần kết nối internet hoặc server backend.
 
-## Yêu cầu
+## Tính Năng
+
+- **Từ vựng**: 60+ từ vựng mẫu theo 6 cấp độ CEFR (A1-C2) và nhiều chủ đề
+- **Quiz**: Kiểm tra kiến thức với câu hỏi trắc nghiệm
+- **Flashcard**: Học từ vựng với thẻ ghi nhớ, vuốt trái/phải
+- **SRS**: Hệ thống ôn tập theo thuật toán SM-2
+- **Tiến độ**: Theo dõi thống kê học tập
+
+## Yêu Cầu
 
 - Android Studio Arctic Fox (2020.3.1) trở lên
 - JDK 17
 - Android SDK 34
-- Gradle 8.2+
+- Gradle 8.2
 
-## Cài đặt
+## Cài Đặt
 
-### 1. Mở project trong Android Studio
+### 1. Mở Project
 
 ```bash
-# Mở Android Studio và chọn "Open"
-# Điều hướng đến thư mục android/
+# Mở Android Studio
+# File → Open → Chọn thư mục android/
 ```
 
-### 2. Cấu hình Backend URL
+### 2. Sync Gradle
 
-Chỉnh sửa `BASE_URL` trong `MainActivity.java`:
-
-```java
-// Cho Android Emulator (localhost)
-private static final String BASE_URL = "http://10.0.2.2:8000";
-
-// Cho thiết bị thật trong mạng LAN
-private static final String BASE_URL = "http://192.168.x.x:8000";
-```
+Android Studio sẽ tự động sync. Nếu không:
+- File → Sync Project with Gradle Files
 
 ### 3. Build APK
 
+**Debug APK:**
 ```bash
-# Debug APK
 ./gradlew assembleDebug
-
-# Release APK
-./gradlew assembleRelease
+# APK: app/build/outputs/apk/debug/app-debug.apk
 ```
 
-APK sẽ được tạo tại:
-- Debug: `app/build/outputs/apk/debug/app-debug.apk`
-- Release: `app/build/outputs/apk/release/app-release.apk`
+**Release APK:**
+```bash
+./gradlew assembleRelease
+# APK: app/build/outputs/apk/release/app-release.apk
+```
 
-## Cấu trúc thư mục
+### 4. Cài đặt lên thiết bị
+
+```bash
+adb install app/build/outputs/apk/debug/app-debug.apk
+```
+
+## Cấu Trúc Project
 
 ```
 android/
 ├── app/
 │   ├── src/main/
 │   │   ├── java/com/studyenglish/
-│   │   │   └── MainActivity.java      # Activity chính với WebView
+│   │   │   ├── data/
+│   │   │   │   ├── dao/          # Data Access Objects
+│   │   │   │   ├── entity/       # Database entities
+│   │   │   │   ├── database/     # Room database
+│   │   │   │   └── repository/   # Data repositories
+│   │   │   ├── ui/
+│   │   │   │   ├── vocabulary/   # Màn hình từ vựng
+│   │   │   │   ├── quiz/         # Màn hình quiz
+│   │   │   │   ├── flashcard/    # Màn hình flashcard
+│   │   │   │   ├── srs/          # Màn hình ôn tập
+│   │   │   │   └── progress/     # Màn hình tiến độ
+│   │   │   ├── utils/            # Utilities
+│   │   │   └── StudyEnglishApp.java
 │   │   ├── res/
-│   │   │   ├── layout/                 # XML layouts
-│   │   │   ├── values/                 # Colors, strings, themes
-│   │   │   ├── drawable/               # Icons, backgrounds
-│   │   │   └── mipmap-*/               # App icons
+│   │   │   ├── layout/           # XML layouts
+│   │   │   ├── values/           # Strings, colors, themes
+│   │   │   ├── drawable/         # Icons, backgrounds
+│   │   │   ├── menu/             # Menu items
+│   │   │   ├── navigation/       # Navigation graph
+│   │   │   └── anim/             # Animations
+│   │   ├── assets/
+│   │   │   └── database/         # Pre-populated SQLite DB
 │   │   └── AndroidManifest.xml
-│   ├── build.gradle                    # App-level dependencies
-│   └── proguard-rules.pro
-├── build.gradle                        # Project-level config
+│   └── build.gradle
+├── scripts/
+│   └── generate_database.py      # Script tạo database mẫu
+├── build.gradle
 ├── settings.gradle
 └── gradle.properties
 ```
 
-## Tính năng Native
+## Thêm Từ Vựng
 
-### JavaScript Bridge
+### Cách 1: Chỉnh sửa script Python
 
-Web app có thể gọi các tính năng Android thông qua `AndroidBridge`:
+Mở `scripts/generate_database.py` và thêm từ vựng vào `VOCABULARY_DATA`:
 
-```javascript
-// Text-to-Speech
-AndroidBridge.speak("Hello, how are you?");
-AndroidBridge.speak("Xin chào", "vi-VN");
-
-// Toast message
-AndroidBridge.showToast("Thông báo!");
-
-// Device info
-const info = AndroidBridge.getDeviceInfo();
+```python
+VOCABULARY_DATA = [
+    # (word, definition, pronunciation, part_of_speech, topic, level, example, example_translation)
+    ("hello", "Xin chào", "/həˈloʊ/", "interjection", "Personal", "A1", "Hello, how are you?", "Xin chào, bạn khỏe không?"),
+    # Thêm từ mới ở đây...
+]
 ```
 
-### Permissions
+Sau đó chạy:
+```bash
+python3 scripts/generate_database.py
+```
 
-- `INTERNET` - Kết nối mạng
-- `ACCESS_NETWORK_STATE` - Kiểm tra trạng thái mạng
-- `RECORD_AUDIO` - Ghi âm (cho tính năng phát âm)
-
-## Chạy Backend
-
-Trước khi chạy app, cần khởi động backend server:
+### Cách 2: Thêm trực tiếp vào SQLite
 
 ```bash
-cd ../web/backend
-pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+sqlite3 app/src/main/assets/database/study_english.db
 ```
 
-## Troubleshooting
+```sql
+INSERT INTO vocabulary (id, word, definition, pronunciation, partOfSpeech, topic, level, example, exampleTranslation, createdAt, updatedAt)
+VALUES ('uuid-here', 'word', 'nghĩa', '/pronunciation/', 'noun', 'Topic', 'A1', 'Example sentence', 'Câu ví dụ', 1234567890000, 1234567890000);
+```
 
-### Không kết nối được đến server
+## Database Schema
 
-1. Kiểm tra backend đang chạy
-2. Kiểm tra `BASE_URL` đúng
-3. Với emulator: sử dụng `10.0.2.2` thay vì `localhost`
-4. Với thiết bị thật: đảm bảo cùng mạng WiFi
+### vocabulary
+| Column | Type | Description |
+|--------|------|-------------|
+| id | TEXT | Primary key (UUID) |
+| word | TEXT | Từ tiếng Anh |
+| definition | TEXT | Nghĩa tiếng Việt |
+| pronunciation | TEXT | Phiên âm IPA |
+| partOfSpeech | TEXT | Loại từ (noun, verb, adj...) |
+| topic | TEXT | Chủ đề |
+| level | TEXT | Cấp độ CEFR (A1-C2) |
+| example | TEXT | Câu ví dụ |
+| exampleTranslation | TEXT | Dịch câu ví dụ |
+| easeFactor | INTEGER | Hệ số dễ (SRS) |
+| interval | INTEGER | Khoảng cách ôn tập (ngày) |
+| repetitions | INTEGER | Số lần ôn tập thành công |
+| nextReview | INTEGER | Timestamp ôn tập tiếp theo |
+| isLearned | INTEGER | Đã học (0/1) |
+| isFavorite | INTEGER | Yêu thích (0/1) |
 
-### WebView blank trắng
+### study_progress
+| Column | Type | Description |
+|--------|------|-------------|
+| id | TEXT | Primary key |
+| totalWordsLearned | INTEGER | Tổng từ đã học |
+| totalQuizzesTaken | INTEGER | Tổng quiz đã làm |
+| totalCorrectAnswers | INTEGER | Tổng câu đúng |
+| totalWrongAnswers | INTEGER | Tổng câu sai |
+| currentStreak | INTEGER | Streak hiện tại |
+| longestStreak | INTEGER | Streak dài nhất |
+| totalStudyTime | INTEGER | Tổng thời gian học (giây) |
 
-1. Kiểm tra `android:usesCleartextTraffic="true"` trong AndroidManifest
-2. Kiểm tra permissions INTERNET
+## Công Nghệ
+
+| Component | Technology |
+|-----------|------------|
+| Language | Java |
+| Database | Room (SQLite) |
+| Architecture | MVVM |
+| Navigation | Jetpack Navigation |
+| UI | Material Design 3 |
+
+## So Sánh Với Phiên Bản Web
+
+| Tính năng | Web | Android |
+|-----------|-----|---------|
+| AI Generation | ✅ | ❌ |
+| Nội dung có sẵn | ❌ | ✅ |
+| Offline | ✅ (với AI models) | ✅ |
+| Dung lượng | ~8GB | ~50MB |
+| Quiz | ✅ | ✅ |
+| Flashcard | ✅ | ✅ |
+| SRS | ✅ | ✅ |
+| Translation | ✅ | ❌ |
+| Chatbot | ✅ | ❌ |
+| Reading | ✅ | ❌ |
+| Writing | ✅ | ❌ |
+
+## License
+
+MIT License

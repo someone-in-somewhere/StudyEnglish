@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/vocabularyFragment">
+
+    <fragment
+        android:id="@+id/vocabularyFragment"
+        android:name="com.studyenglish.ui.vocabulary.VocabularyFragment"
+        android:label="@string/nav_vocabulary">
+        <action
+            android:id="@+id/action_vocabulary_to_detail"
+            app:destination="@id/vocabularyDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/vocabularyDetailFragment"
+        android:name="com.studyenglish.ui.vocabulary.VocabularyDetailFragment"
+        android:label="Chi tiết từ vựng">
+        <argument
+            android:name="vocabularyId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/quizFragment"
+        android:name="com.studyenglish.ui.quiz.QuizFragment"
+        android:label="@string/nav_quiz">
+        <action
+            android:id="@+id/action_quiz_to_play"
+            app:destination="@id/quizPlayFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/quizPlayFragment"
+        android:name="com.studyenglish.ui.quiz.QuizPlayFragment"
+        android:label="Làm Quiz">
+        <argument
+            android:name="topic"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="level"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="count"
+            app:argType="integer"
+            android:defaultValue="10" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/flashcardFragment"
+        android:name="com.studyenglish.ui.flashcard.FlashcardFragment"
+        android:label="@string/nav_flashcard" />
+
+    <fragment
+        android:id="@+id/srsFragment"
+        android:name="com.studyenglish.ui.srs.SrsFragment"
+        android:label="@string/nav_srs" />
+
+    <fragment
+        android:id="@+id/progressFragment"
+        android:name="com.studyenglish.ui.progress.ProgressFragment"
+        android:label="@string/nav_progress" />
+
+</navigation>
