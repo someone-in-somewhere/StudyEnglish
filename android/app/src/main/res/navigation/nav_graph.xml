@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/vocabularyFragment">
+
+    <fragment
+        android:id="@+id/vocabularyFragment"
+        android:name="com.studyenglish.ui.vocabulary.VocabularyFragment"
+        android:label="@string/nav_vocabulary">
+        <action
+            android:id="@+id/action_vocabulary_to_generator"
+            app:destination="@id/vocabularyGeneratorFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/vocabularyGeneratorFragment"
+        android:name="com.studyenglish.ui.vocabulary.VocabularyGeneratorFragment"
+        android:label="Vocabulary Generator" />
+
+    <fragment
+        android:id="@+id/quizFragment"
+        android:name="com.studyenglish.ui.quiz.QuizFragment"
+        android:label="@string/nav_quiz">
+        <action
+            android:id="@+id/action_quiz_to_play"
+            app:destination="@id/quizPlayFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/quizPlayFragment"
+        android:name="com.studyenglish.ui.quiz.QuizPlayFragment"
+        android:label="Làm Quiz">
+        <argument
+            android:name="topic"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="level"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="count"
+            app:argType="integer"
+            android:defaultValue="10" />
+    </fragment>
+
+    <!-- Practice Menu -->
+    <fragment
+        android:id="@+id/practiceFragment"
+        android:name="com.studyenglish.ui.practice.PracticeFragment"
+        android:label="@string/nav_practice">
+        <action
+            android:id="@+id/action_practice_to_conversation"
+            app:destination="@id/conversationFragment" />
+        <action
+            android:id="@+id/action_practice_to_translation"
+            app:destination="@id/translationFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/conversationFragment"
+        android:name="com.studyenglish.ui.conversation.ConversationFragment"
+        android:label="Luyện hội thoại" />
+
+    <fragment
+        android:id="@+id/translationFragment"
+        android:name="com.studyenglish.ui.translation.TranslationPracticeFragment"
+        android:label="Luyện dịch" />
+
+    <fragment
+        android:id="@+id/flashcardFragment"
+        android:name="com.studyenglish.ui.flashcard.FlashcardFragment"
+        android:label="@string/nav_flashcard" />
+
+    <fragment
+        android:id="@+id/progressFragment"
+        android:name="com.studyenglish.ui.progress.ProgressFragment"
+        android:label="@string/nav_progress" />
+
+</navigation>

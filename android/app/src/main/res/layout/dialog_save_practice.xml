@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sau khi học xong, nhập điểm và từ vựng mới:"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary" />
+
+    <!-- Score -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Điểm (0-10):"
+        android:textSize="14sp"
+        android:textColor="@color/text_primary" />
+
+    <EditText
+        android:id="@+id/edit_score"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:hint="8.5"
+        android:inputType="numberDecimal"
+        android:maxLength="4"
+        android:padding="12dp"
+        android:background="@drawable/bg_spinner" />
+
+    <!-- Vocabulary -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Từ vựng mới (paste JSON từ AI):"
+        android:textSize="14sp"
+        android:textColor="@color/text_primary" />
+
+    <EditText
+        android:id="@+id/edit_vocabulary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:hint="[{&quot;word&quot;: &quot;example&quot;, &quot;meaning_vi&quot;: &quot;ví dụ&quot;}]"
+        android:inputType="textMultiLine"
+        android:minLines="3"
+        android:maxLines="6"
+        android:padding="12dp"
+        android:background="@drawable/bg_spinner"
+        android:gravity="top" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Tip: Yêu cầu AI trả về từ vựng dạng JSON để dễ lưu"
+        android:textSize="12sp"
+        android:textColor="@color/text_hint"
+        android:textStyle="italic" />
+
+</LinearLayout>

@@ -1,0 +1,73 @@
+{
+  "app": {
+    "name": "Study English",
+    "version": "1.0.0",
+    "description": "Ứng dụng học tiếng Anh offline với AI"
+  },
+  "api": {
+    "base_path": "/api/v1",
+    "timeout": 30000
+  },
+  "features": {
+    "vocabulary": true,
+    "quiz": true,
+    "translation": true,
+    "chat": true,
+    "reading": true,
+    "writing": true,
+    "flashcards": true,
+    "srs": true,
+    "learning_paths": true,
+    "error_analysis": true
+  },
+  "cefr_levels": ["A1", "A2", "B1", "B2", "C1", "C2"],
+  "topics": {
+    "essential": [
+      "greetings",
+      "numbers",
+      "time",
+      "colors"
+    ],
+    "daily_life": [
+      "food",
+      "shopping",
+      "home",
+      "health"
+    ],
+    "professional": [
+      "business",
+      "technology",
+      "education",
+      "work"
+    ],
+    "general": [
+      "nature",
+      "weather",
+      "travel",
+      "sports"
+    ],
+    "culture": [
+      "music",
+      "movies",
+      "art",
+      "literature"
+    ],
+    "specialized": [
+      "science",
+      "medicine",
+      "law"
+    ]
+  },
+  "quiz_types": [
+    "multiple_choice",
+    "fill_in_blank",
+    "matching"
+  ],
+  "exercise_types": [
+    "fill_in_blank",
+    "rewriting",
+    "translation",
+    "word_order",
+    "error_correction"
+  ]
+}

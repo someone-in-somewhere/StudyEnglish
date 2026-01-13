@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Study English</string>
+
+    <!-- Navigation -->
+    <string name="nav_vocabulary">Từ vựng</string>
+    <string name="nav_quiz">Quiz</string>
+    <string name="nav_practice">Luyện tập</string>
+    <string name="nav_flashcard">Flashcard</string>
+    <string name="nav_progress">Tiến độ</string>
+    <string name="nav_srs">Ôn tập</string>
+
+    <!-- Vocabulary -->
+    <string name="vocabulary_title">Từ vựng</string>
+    <string name="search_hint">Tìm kiếm từ vựng...</string>
+    <string name="filter_topic">Chủ đề</string>
+    <string name="filter_level">Cấp độ</string>
+    <string name="all_topics">Tất cả chủ đề</string>
+    <string name="all_levels">Tất cả cấp độ</string>
+    <string name="mark_learned">Đã học</string>
+    <string name="add_favorite">Yêu thích</string>
+
+    <!-- Quiz -->
+    <string name="quiz_title">Quiz</string>
+    <string name="start_quiz">Bắt đầu Quiz</string>
+    <string name="next_question">Câu tiếp</string>
+    <string name="finish_quiz">Hoàn thành</string>
+    <string name="quiz_result">Kết quả</string>
+    <string name="correct_answers">Đúng: %1$d/%2$d</string>
+    <string name="quiz_score">Điểm: %1$d%%</string>
+
+    <!-- Flashcard -->
+    <string name="flashcard_title">Flashcard</string>
+    <string name="tap_to_flip">Chạm để lật</string>
+    <string name="swipe_left">Vuốt trái: Chưa nhớ</string>
+    <string name="swipe_right">Vuốt phải: Đã nhớ</string>
+    <string name="cards_remaining">Còn lại: %1$d thẻ</string>
+
+    <!-- SRS -->
+    <string name="srs_title">Ôn tập (SRS)</string>
+    <string name="due_for_review">Cần ôn tập</string>
+    <string name="no_reviews_due">Không có từ nào cần ôn tập!</string>
+    <string name="review_again">Ôn lại</string>
+    <string name="review_hard">Khó</string>
+    <string name="review_good">Tốt</string>
+    <string name="review_easy">Dễ</string>
+
+    <!-- Progress -->
+    <string name="progress_title">Tiến độ</string>
+    <string name="words_learned">Từ đã học</string>
+    <string name="quizzes_taken">Quiz đã làm</string>
+    <string name="accuracy">Độ chính xác</string>
+    <string name="current_streak">Streak hiện tại</string>
+    <string name="study_time">Thời gian học</string>
+
+    <!-- CEFR Levels -->
+    <string name="level_a1">A1 - Beginner</string>
+    <string name="level_a2">A2 - Elementary</string>
+    <string name="level_b1">B1 - Intermediate</string>
+    <string name="level_b2">B2 - Upper Intermediate</string>
+    <string name="level_c1">C1 - Advanced</string>
+    <string name="level_c2">C2 - Proficiency</string>
+
+    <!-- Topics -->
+    <string name="topic_personal">Cá nhân &amp; Giao tiếp</string>
+    <string name="topic_work">Công việc &amp; Kinh doanh</string>
+    <string name="topic_travel">Du lịch &amp; Phương tiện</string>
+    <string name="topic_food">Ẩm thực</string>
+    <string name="topic_health">Sức khỏe</string>
+    <string name="topic_education">Giáo dục</string>
+    <string name="topic_technology">Công nghệ</string>
+    <string name="topic_entertainment">Giải trí</string>
+    <string name="topic_nature">Thiên nhiên</string>
+    <string name="topic_sports">Thể thao</string>
+
+    <!-- Common -->
+    <string name="ok">OK</string>
+    <string name="cancel">Hủy</string>
+    <string name="save">Lưu</string>
+    <string name="delete">Xóa</string>
+    <string name="edit">Sửa</string>
+    <string name="loading">Đang tải...</string>
+    <string name="error">Lỗi</string>
+    <string name="success">Thành công</string>
+    <string name="empty_list">Không có dữ liệu</string>
+</resources>
